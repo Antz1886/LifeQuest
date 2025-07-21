@@ -62,10 +62,12 @@ export function AppSidebar() {
           </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Project Vault" disabled>
-            <Archive />
-            <span>Project Vault</span>
-          </SidebarMenuButton>
+           <Link href="/project-vault" passHref>
+              <SidebarMenuButton tooltip="Project Vault" isActive={pathname === '/project-vault'}>
+                <Archive />
+                <span>Project Vault</span>
+              </SidebarMenuButton>
+            </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Zen Zone" disabled>
