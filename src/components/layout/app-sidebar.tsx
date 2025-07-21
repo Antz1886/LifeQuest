@@ -70,10 +70,12 @@ export function AppSidebar() {
             </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Zen Zone" disabled>
-            <BrainCircuit />
-            <span>Zen Zone</span>
-          </SidebarMenuButton>
+          <Link href="/zen-zone" passHref>
+            <SidebarMenuButton tooltip="Zen Zone" isActive={pathname === '/zen-zone'}>
+              <BrainCircuit />
+              <span>Zen Zone</span>
+            </SidebarMenuButton>
+          </Link>
         </SidebarMenuItem>
       </SidebarMenu>
       <SidebarFooter>
