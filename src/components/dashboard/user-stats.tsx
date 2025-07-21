@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useUser } from "@/context/user-context";
@@ -46,13 +47,6 @@ export function UserStats() {
             </div>
           </div>
            <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
-            <Dumbbell className="w-8 h-8 text-primary"/>
-            <div>
-              <p className="font-bold text-lg">Fitness</p>
-              <p className="text-sm text-muted-foreground">Buff Badge</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
             <BookOpen className="w-8 h-8 text-primary"/>
             <div>
               <p className="font-bold text-lg">{profile.streaks.code} Days</p>
@@ -64,6 +58,13 @@ export function UserStats() {
             <div>
               <p className="font-bold text-lg">{profile.streaks.meditation} Days</p>
               <p className="text-sm text-muted-foreground">Mindful Streak</p>
+            </div>
+          </div>
+           <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
+            <Dumbbell className="w-8 h-8 text-primary"/>
+            <div>
+              <p className="font-bold text-lg">Buff Badge</p>
+              <p className="text-sm text-muted-foreground">Fitness</p>
             </div>
           </div>
         </div>
