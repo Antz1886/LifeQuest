@@ -1,5 +1,8 @@
+
 "use client";
 
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import {
   Sidebar,
   SidebarHeader,
@@ -20,26 +23,32 @@ import {
 } from "lucide-react";
 
 export function AppSidebar() {
+  const pathname = usePathname();
+
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 p-2">
+        <Link href="/" className="flex items-center gap-2 p-2">
             <Flame className="w-8 h-8 text-primary" />
             <span className="text-2xl font-headline font-semibold">LifeQuest</span>
-        </div>
+        </Link>
       </SidebarHeader>
       <SidebarMenu className="flex-1">
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Dashboard" isActive>
-            <LayoutGrid />
-            <span>Dashboard</span>
-          </SidebarMenuButton>
+          <Link href="/" passHref>
+            <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'}>
+              <LayoutGrid />
+              <span>Dashboard</span>
+            </SidebarMenuButton>
+          </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Weekly Map">
-            <Map />
-            <span>Weekly Map</span>
-          </SidebarMenuButton>
+          <Link href="/weekly-map" passHref>
+            <SidebarMenuButton tooltip="Weekly Map" isActive={pathname === '/weekly-map'}>
+              <Map />
+              <span>Weekly Map</span>
+            </SidebarMenuButton>
+          </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Progress">

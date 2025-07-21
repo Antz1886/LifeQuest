@@ -30,7 +30,7 @@ export default function Home() {
                  </Button>
                </FocusMode>
             </header>
-            <main className="p-4 lg:p-6 space-y-6 bg-background">
+            <main className="p-4 lg:p-6 space-y-6">
               <UserStats />
               <QuestBoard />
             </main>
