@@ -54,10 +54,12 @@ export function AppSidebar() {
           </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Progress" disabled>
-            <BarChart3 />
-            <span>Progress Log</span>
-          </SidebarMenuButton>
+          <Link href="/progress-log" passHref>
+            <SidebarMenuButton tooltip="Progress" isActive={pathname === '/progress-log'}>
+              <BarChart3 />
+              <span>Progress Log</span>
+            </SidebarMenuButton>
+          </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Project Vault" disabled>
