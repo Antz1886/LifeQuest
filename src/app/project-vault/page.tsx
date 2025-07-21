@@ -9,12 +9,35 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Archive, PlusCircle, Check, Circle } from "lucide-react";
 import { AddProjectDialog } from "@/components/project-vault/add-project-dialog";
 import { useUser } from "@/context/user-context";
 import { Progress } from "@/components/ui/progress";
+
+function AddTaskForm({ projectId }: { projectId: string }) {
+    const [taskText, setTaskText] = useState("");
+    const { addProjectTask } = useUser();
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        addProjectTask(projectId, taskText);
+        setTaskText("");
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="flex gap-2">
+            <Input
+                placeholder="Add a new task..."
+                value={taskText}
+                onChange={(e) => setTaskText(e.target.value)}
+            />
+            <Button type="submit" size="sm">Add</Button>
+        </form>
+    );
+}
 
 function ProjectVaultContent() {
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -77,6 +100,9 @@ function ProjectVaultContent() {
                                             )) : <p className="text-sm text-muted-foreground italic">No tasks yet.</p>}
                                         </div>
                                     </CardContent>
+                                    <CardFooter>
+                                        <AddTaskForm projectId={project.id} />
+                                    </CardFooter>
                                 </Card>
                             )
                         })}

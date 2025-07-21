@@ -17,6 +17,7 @@ interface UserContextType {
   completeQuest: (questId: string) => void;
   addProject: (projectData: Omit<Project, 'id' | 'tasks'>) => void;
   toggleProjectTask: (projectId: string, taskId: string) => void;
+  addProjectTask: (projectId: string, taskText: string) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -154,12 +155,33 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+   const addProjectTask = (projectId: string, taskText: string) => {
+    if (!taskText.trim()) return;
+
+    const newTask: ProjectTask = {
+      id: `t-${Date.now()}-${Math.random()}`,
+      text: taskText,
+      isCompleted: false,
+    };
+
+    setProjects(prevProjects =>
+      prevProjects.map(p =>
+        p.id === projectId
+          ? {
+              ...p,
+              tasks: [...p.tasks, newTask],
+            }
+          : p
+      )
+    );
+  };
+
   if (!isLoaded) {
     return null; // Or a loading spinner
   }
 
   return (
-    <UserContext.Provider value={{ profile, quests, projects, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask }}>
+    <UserContext.Provider value={{ profile, quests, projects, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask }}>
       {children}
     </UserContext.Provider>
   );
