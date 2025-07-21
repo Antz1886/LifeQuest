@@ -38,6 +38,7 @@ const UserProfileSchema = z.object({
 const GenerateProfileCustomizationInputSchema = z.object({
   profile: UserProfileSchema.describe("The user's profile data."),
   completedQuests: z.array(QuestSchema).describe("A list of the user's recently completed quests."),
+  avatarPrompt: z.string().optional().describe("A user-provided prompt to guide avatar generation."),
 });
 export type GenerateProfileCustomizationInput = z.infer<typeof GenerateProfileCustomizationInputSchema>;
 
@@ -97,6 +98,10 @@ Incorporate visual elements that reflect this title. For example:
 - For "Code Samurai", maybe a character with a glowing keyboard and a warrior stance.
 - For "Mindful Master", a serene character surrounded by calm energy.
 - For "Cyber-Athlete", a dynamic figure with circuits and athletic gear.
+
+{{#if avatarPrompt}}
+The user has provided this creative direction: "{{avatarPrompt}}". Please incorporate it.
+{{/if}}
 
 The style should be modern, vibrant, and inspiring, with a dark, fantasy, epic theme. It's a profile picture. Focus on the bust/headshot. Centered. Epic lighting.`;
     

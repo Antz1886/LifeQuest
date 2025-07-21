@@ -2,8 +2,9 @@
 "use client";
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Wand2, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/context/user-context";
@@ -12,6 +13,7 @@ import { generateProfileCustomization } from '@/ai/flows/generate-profile-custom
 
 export function ProfileCustomizer() {
     const [isLoading, setIsLoading] = useState(false);
+    const [avatarPrompt, setAvatarPrompt] = useState("");
     const { toast } = useToast();
     const { profile, quests, updateProfileCustomization } = useUser();
     const completedQuests = quests.filter(q => q.isCompleted);
@@ -27,7 +29,8 @@ export function ProfileCustomizer() {
                     xpToNextLevel: profile.xpToNextLevel,
                     streaks: profile.streaks,
                 },
-                completedQuests
+                completedQuests,
+                avatarPrompt: avatarPrompt || undefined,
             });
             updateProfileCustomization(result.title, result.avatarDataUri);
             toast({
@@ -54,10 +57,10 @@ export function ProfileCustomizer() {
                     Customize Your Profile
                 </CardTitle>
                 <CardDescription>
-                    Use AI to generate a new title and avatar based on your recent accomplishments. Show the world who you are!
+                    Use AI to generate a new title and avatar based on your accomplishments. Guide the AI with a prompt for your avatar!
                 </CardDescription>
             </CardHeader>
-            <CardContent className="text-center space-y-6">
+            <CardContent className="space-y-6">
                 <div className="w-full aspect-square bg-muted rounded-lg flex items-center justify-center overflow-hidden">
                     {isLoading ? (
                          <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -72,6 +75,16 @@ export function ProfileCustomizer() {
                         )
                     )}
                 </div>
+                 <div className="space-y-2">
+                    <Input 
+                        placeholder="Avatar prompt (e.g., 'a female warrior with a laptop')"
+                        value={avatarPrompt}
+                        onChange={(e) => setAvatarPrompt(e.target.value)}
+                        disabled={isLoading}
+                    />
+                 </div>
+            </CardContent>
+            <CardFooter>
                  <Button
                     onClick={handleGenerate}
                     disabled={isLoading}
@@ -90,7 +103,7 @@ export function ProfileCustomizer() {
                         </>
                     )}
                 </Button>
-            </CardContent>
+            </CardFooter>
         </Card>
     );
 }

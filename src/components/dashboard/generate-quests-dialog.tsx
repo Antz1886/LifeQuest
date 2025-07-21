@@ -22,22 +22,20 @@ export function GenerateQuestsDialog() {
     const [open, setOpen] = useState(false);
     const [goals, setGoals] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const { setQuests } = useUser();
+    const { setQuests, projects } = useUser();
     const { toast } = useToast();
 
     const handleGenerate = async () => {
-        if (!goals.trim()) {
-            toast({
-                title: "Goals cannot be empty",
-                description: "Please describe your goals for today.",
-                variant: "destructive",
-            });
-            return;
-        }
-
         setIsLoading(true);
         try {
-            const { quests } = await generateQuests({ goals });
+            // Pass active projects to the AI flow
+            const activeProjects = projects.filter(p => p.tasks.some(t => !t.isCompleted));
+
+            const { quests } = await generateQuests({ 
+                goals,
+                location: 'Mountain View, CA', // You could make this dynamic in a real app
+                activeProjects: activeProjects,
+             });
             setQuests(quests);
             toast({
                 title: "Quests Generated!",
@@ -69,12 +67,12 @@ export function GenerateQuestsDialog() {
                 <DialogHeader>
                     <DialogTitle className="font-headline text-2xl text-primary flex items-center gap-2"><Wand2 />AI Quest Generation</DialogTitle>
                     <DialogDescription>
-                        Describe your main goals for today, and our AI will forge a legendary quest list for you.
+                        Describe your main goals, or let the AI suggest quests based on your active projects.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
                     <Textarea
-                        placeholder="e.g., 'Finish my project presentation, hit the gym for a leg day, and learn about Next.js server components.'"
+                        placeholder="e.g., 'Finish my project presentation, hit the gym for a leg day, and learn about Next.js server components.' (Optional if you have active projects)"
                         className="min-h-[120px]"
                         value={goals}
                         onChange={(e) => setGoals(e.target.value)}

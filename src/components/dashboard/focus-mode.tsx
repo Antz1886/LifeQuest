@@ -36,7 +36,7 @@ export function FocusMode({ children }: { children: ReactNode }) {
             if (mode === 'focus') {
                 setMode('break');
                 setTimeLeft(BREAK_TIME);
-                toast({ title: "Focus session over!", description: "Time for a short break. You earned a rare achievement: 'Deep Dive Hacker'!", variant: "default" });
+                toast({ title: "Focus session over!", description: "Time for a short break. You've earned it!", variant: "default" });
             } else {
                 setMode('focus');
                 setTimeLeft(FOCUS_TIME);

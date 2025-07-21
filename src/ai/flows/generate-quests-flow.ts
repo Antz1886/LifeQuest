@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview An AI flow to generate a list of quests based on user goals.
+ * @fileOverview An AI flow to generate a list of quests based on user goals and projects.
  *
  * - generateQuests - A function that handles the quest generation process.
  * - GenerateQuestsInput - The input type for the generateQuests function.
@@ -10,7 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { QuestCategory } from '@/lib/types';
+import { QuestCategory, Project } from '@/lib/types';
 import { getCurrentWeather } from '@/services/weather';
 
 const QuestCategorySchema = z.enum(["Mind", "Strength", "Code", "Wisdom", "Legacy"]);
@@ -24,9 +24,24 @@ const QuestSchema = z.object({
   time: z.string().describe("A suggested time or duration for the quest, e.g., '10 AM' or '30 min'."),
 });
 
+const ProjectTaskSchema = z.object({
+  id: z.string(),
+  text: z.string(),
+  isCompleted: z.boolean(),
+});
+
+const ProjectSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  tasks: z.array(ProjectTaskSchema),
+});
+
+
 const GenerateQuestsInputSchema = z.object({
   goals: z.string().describe("The user's high-level goals for the day."),
   location: z.string().default('Mountain View, CA').describe("The user's current location."),
+  activeProjects: z.array(ProjectSchema).optional().describe("A list of the user's active projects from their Project Vault."),
 });
 export type GenerateQuestsInput = z.infer<typeof GenerateQuestsInputSchema>;
 
@@ -69,15 +84,24 @@ Quest Categories:
 - Wisdom: Reading, learning new non-tech skills.
 - Legacy: Career tasks, business development, networking.
 
-Based on the user's goals below, create a list of 5-7 quests. Each quest should be specific, actionable, and aligned with one of the categories. Assign appropriate XP based on the quest's difficulty and duration. All quests should be generated with 'isCompleted' set to false. If the user's goals are vague or unstated, create a balanced set of starter quests across different categories.
+Based on the user's goals and active projects below, create a list of 5-7 quests. Each quest should be specific, actionable, and aligned with one of the categories. Assign appropriate XP based on the quest's difficulty and duration. All quests should be generated with 'isCompleted' set to false.
+
+If the user's goals are vague or unstated, create a balanced set of starter quests across different categories, drawing inspiration from their active projects if available.
 
 IMPORTANT: Use the 'getCurrentWeather' tool to check the weather for the user's location. Suggest weather-appropriate activities. For example, if it's sunny, suggest an outdoor 'Strength' or 'Mind' quest. If it's rainy, suggest an indoor one.
 
 User's Location:
 {{{location}}}
 
-User's Goals:
+User's Stated Goals:
 {{{goals}}}
+
+{{#if activeProjects}}
+User's Active Projects (for additional context):
+{{#each activeProjects}}
+- Project: "{{this.title}}" - {{this.description}}
+{{/each}}
+{{/if}}
 `,
   config: {
     safetySettings: [
