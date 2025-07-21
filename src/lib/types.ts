@@ -20,3 +20,16 @@ export interface UserProfile {
     code: number;
   }
 }
+
+export interface ProjectTask {
+    id: string;
+    text: string;
+    isCompleted: boolean;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  description: string;
+  tasks: ProjectTask[];
+}

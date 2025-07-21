@@ -3,17 +3,20 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { userProfile as initialProfile, quests as initialQuests } from '@/lib/mock-data';
-import type { UserProfile, Quest } from '@/lib/types';
+import type { UserProfile, Quest, Project, ProjectTask } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserContextType {
   profile: UserProfile;
   quests: Quest[];
+  projects: Project[];
   setQuests: (quests: Quest[]) => void;
   addQuest: (questData: Omit<Quest, 'id' | 'isCompleted'>) => void;
   editQuest: (updatedQuest: Quest) => void;
   deleteQuest: (questId: string) => void;
   completeQuest: (questId: string) => void;
+  addProject: (projectData: Omit<Project, 'id' | 'tasks'>) => void;
+  toggleProjectTask: (projectId: string, taskId: string) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -21,6 +24,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile>(initialProfile);
   const [quests, setQuests] = useState<Quest[]>(initialQuests);
+  const [projects, setProjects] = useState<Project[]>([]);
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -34,6 +38,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       const savedQuests = localStorage.getItem('userQuests');
       if (savedQuests) {
         setQuests(JSON.parse(savedQuests));
+      }
+      const savedProjects = localStorage.getItem('userProjects');
+      if (savedProjects) {
+        setProjects(JSON.parse(savedProjects));
       }
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
@@ -63,6 +71,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
     }
   }, [quests, isLoaded]);
+
+  // Save projects to localStorage whenever they change
+  useEffect(() => {
+    if (isLoaded) {
+     try {
+       localStorage.setItem('userProjects', JSON.stringify(projects));
+     } catch (error) {
+       console.error("Failed to save projects to localStorage", error);
+     }
+   }
+ }, [projects, isLoaded]);
 
   const addQuest = (questData: Omit<Quest, 'id' | 'isCompleted'>) => {
     const newQuest: Quest = {
@@ -111,12 +130,36 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  const addProject = (projectData: Omit<Project, 'id' | 'tasks'>) => {
+    const newProject: Project = {
+      ...projectData,
+      id: `p-${Date.now()}-${Math.random()}`,
+      tasks: [], // Start with an empty task list
+    };
+    setProjects(prevProjects => [...prevProjects, newProject]);
+  };
+  
+  const toggleProjectTask = (projectId: string, taskId: string) => {
+    setProjects(prevProjects =>
+      prevProjects.map(p =>
+        p.id === projectId
+          ? {
+              ...p,
+              tasks: p.tasks.map(t =>
+                t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t
+              ),
+            }
+          : p
+      )
+    );
+  };
+
   if (!isLoaded) {
     return null; // Or a loading spinner
   }
 
   return (
-    <UserContext.Provider value={{ profile, quests, setQuests, addQuest, editQuest, deleteQuest, completeQuest }}>
+    <UserContext.Provider value={{ profile, quests, projects, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask }}>
       {children}
     </UserContext.Provider>
   );
