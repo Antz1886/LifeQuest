@@ -14,11 +14,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import type { Quest } from '@/lib/types';
 
 const FOCUS_TIME = 25 * 60; // 25 minutes
 const BREAK_TIME = 5 * 60; // 5 minutes
 
-export function FocusMode({ children }: { children: ReactNode }) {
+export function FocusMode({ children, quest }: { children: ReactNode, quest: Quest }) {
     const [mode, setMode] = useState<'focus' | 'break'>('focus');
     const [timeLeft, setTimeLeft] = useState(FOCUS_TIME);
     const [isActive, setIsActive] = useState(false);
@@ -71,7 +72,7 @@ export function FocusMode({ children }: { children: ReactNode }) {
                 <DialogHeader>
                     <DialogTitle className="font-headline text-2xl text-primary">{mode === 'focus' ? 'Focus Mode' : 'Break Time'}</DialogTitle>
                     <DialogDescription>
-                        {mode === 'focus' ? 'Minimize distractions and conquer your quests.' : 'Relax and recharge your energy.'}
+                        Focusing on: <span className="font-semibold text-accent">{quest.title}</span>
                     </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col items-center justify-center space-y-6 py-8">

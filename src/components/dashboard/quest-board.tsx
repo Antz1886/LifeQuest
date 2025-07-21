@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { GenerateQuestsDialog } from "@/components/dashboard/generate-quests-dialog";
 import { AddEditQuestDialog } from "@/components/dashboard/add-edit-quest-dialog";
 import { Button } from "@/components/ui/button";
+import { FocusMode } from "@/components/dashboard/focus-mode";
 import {
   BrainCircuit,
   Dumbbell,
@@ -20,6 +21,7 @@ import {
   Edit,
   Trash2,
   PlusCircle,
+  Target
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -81,7 +83,14 @@ function QuestItem({ quest }: { quest: Quest }) {
           <Badge variant="secondary">{quest.time}</Badge>
         </div>
       </div>
-      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {!quest.isCompleted && (
+            <FocusMode quest={quest}>
+                <Button variant="ghost" size="icon">
+                    <Target className="w-4 h-4" />
+                </Button>
+            </FocusMode>
+        )}
         <AddEditQuestDialog
           quest={quest}
           mode="edit"

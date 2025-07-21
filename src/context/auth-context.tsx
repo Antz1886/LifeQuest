@@ -2,9 +2,10 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getAuth, onAuthStateChanged, signInWithPopup, signOut, User } from 'firebase/auth';
+import { User } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
+import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -25,18 +26,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
-      if (!user && pathname !== '/login') {
-         router.push('/login');
-      }
     });
-
     return () => unsubscribe();
-  }, [router, pathname]);
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const isAuthPage = pathname === '/login';
+
+    if (!user && !isAuthPage) {
+      router.push('/login');
+    } else if (user && isAuthPage) {
+      router.push('/');
+    }
+  }, [user, loading, pathname, router]);
+
 
   const signInWithGoogle = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-      router.push('/');
+      // The useEffect above will handle the redirect
     } catch (error) {
       console.error("Error signing in with Google: ", error);
     }
@@ -45,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       await signOut(auth);
-      router.push('/login');
+       // The useEffect above will handle the redirect
     } catch (error) {
       console.error("Error signing out: ", error);
     }
@@ -53,20 +63,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const value = { user, loading, signInWithGoogle, logout };
 
-  if (loading && pathname !== '/login') {
-      return <div className="flex h-screen w-full items-center justify-center">Loading...</div>
+  if (loading) {
+      return <div className="flex h-screen w-full items-center justify-center bg-background">Loading...</div>
   }
   
-  if (!user && pathname !== '/login') {
-      return null;
-  }
-  
-  if (user && pathname === '/login') {
-      router.push('/');
-      return null;
-  }
-
-
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

@@ -70,12 +70,7 @@ const prompt = ai.definePrompt({
   input: { schema: GenerateQuestsInputSchema },
   output: { schema: GenerateQuestsOutputSchema },
   tools: [getWeatherTool],
-  prompt: `You are a productivity assistant for a gamified life app called LifeQuest. Your task is to transform a user's daily goals into a list of actionable "quests".
-
-User's Profile:
-- Name: Ansline
-- Level: 12
-- Persona: A high-performer balancing a demanding job in cybersecurity (NOC Manager), personal fitness, family, continuous learning (front-end development), and a side-business in women's health.
+  prompt: `You are a productivity assistant for a gamified life app. Your task is to transform a user's daily goals into a list of actionable "quests".
 
 Quest Categories:
 - Mind: Meditation, family time, relaxation.

@@ -56,6 +56,19 @@ async function toWav(
     });
 }
 
+const scriptGenerationPrompt = ai.definePrompt({
+    name: 'generateMeditationScriptPrompt',
+    input: { schema: GenerateMeditationInputSchema },
+    output: { schema: z.object({ script: z.string() }) },
+    prompt: `You are a world-class meditation guide. A user has requested a specific type of meditation. Generate a soothing, supportive, and well-structured meditation script based on their request. The script should be formatted with paragraphs for easy reading.
+
+User Request:
+{{{prompt}}}
+
+Begin the script now.`
+});
+
+
 const generateMeditationFlow = ai.defineFlow(
   {
     name: 'generateMeditationFlow',
@@ -64,16 +77,8 @@ const generateMeditationFlow = ai.defineFlow(
   },
   async (input) => {
     // 1. Generate the meditation script
-    const scriptResponse = await ai.generate({
-      prompt: `You are a world-class meditation guide. A user has requested a specific type of meditation. Generate a soothing, supportive, and well-structured meditation script based on their request. The script should be formatted with paragraphs for easy reading.
-
-User Request:
-{{{prompt}}}
-
-Begin the script now.`
-    });
-
-    const script = scriptResponse.text;
+    const scriptResponse = await scriptGenerationPrompt(input);
+    const script = scriptResponse.output?.script;
     if (!script) {
         throw new Error("Failed to generate meditation script.");
     }
