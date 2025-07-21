@@ -54,19 +54,19 @@ export function AppSidebar() {
           </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Progress">
+          <SidebarMenuButton tooltip="Progress" disabled>
             <BarChart3 />
             <span>Progress Log</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Project Vault">
+          <SidebarMenuButton tooltip="Project Vault" disabled>
             <Archive />
             <span>Project Vault</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Zen Zone">
+          <SidebarMenuButton tooltip="Zen Zone" disabled>
             <BrainCircuit />
             <span>Zen Zone</span>
           </SidebarMenuButton>
@@ -74,13 +74,13 @@ export function AppSidebar() {
       </SidebarMenu>
       <SidebarFooter>
          <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Profile">
+          <SidebarMenuButton tooltip="Profile" disabled>
             <User />
             <span>Profile</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Settings">
+          <SidebarMenuButton tooltip="Settings" disabled>
             <Settings />
             <span>Settings</span>
           </SidebarMenuButton>
