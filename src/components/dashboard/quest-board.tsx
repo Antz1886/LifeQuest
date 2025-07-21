@@ -12,10 +12,10 @@ import { AddEditQuestDialog } from "@/components/dashboard/add-edit-quest-dialog
 import { Button } from "@/components/ui/button";
 import {
   BrainCircuit,
-  HeartPulse,
+  Dumbbell,
   Code,
   BookOpen,
-  Users,
+  Briefcase,
   Swords,
   Edit,
   Trash2,
@@ -36,18 +36,18 @@ import {
 
 const categoryIcons: Record<QuestCategory, React.ReactNode> = {
   Mind: <BrainCircuit className="w-5 h-5" />,
-  Strength: <HeartPulse className="w-5 h-5" />,
+  Strength: <Dumbbell className="w-5 h-5" />,
   Code: <Code className="w-5 h-5" />,
   Wisdom: <BookOpen className="w-5 h-5" />,
-  Legacy: <Users className="w-5 h-5" />,
+  Legacy: <Briefcase className="w-5 h-5" />,
 };
 
 const categoryColors: Record<QuestCategory, string> = {
-  Mind: "text-blue-400 border-blue-400/50",
-  Strength: "text-red-400 border-red-400/50",
-  Code: "text-green-400 border-green-400/50",
-  Wisdom: "text-yellow-400 border-yellow-400/50",
-  Legacy: "text-purple-400 border-purple-400/50",
+  Mind: "text-chart-1 border-chart-1/50",
+  Strength: "text-chart-2 border-chart-2/50",
+  Code: "text-chart-3 border-chart-3/50",
+  Wisdom: "text-chart-4 border-chart-4/50",
+  Legacy: "text-chart-5 border-chart-5/50",
 };
 
 function QuestItem({ quest }: { quest: Quest }) {
