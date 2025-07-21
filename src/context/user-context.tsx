@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { userProfile as initialProfile, quests as initialQuests } from '@/lib/mock-data';
 import type { UserProfile, Quest } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +22,47 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile>(initialProfile);
   const [quests, setQuests] = useState<Quest[]>(initialQuests);
   const { toast } = useToast();
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load state from localStorage on initial client-side render
+  useEffect(() => {
+    try {
+      const savedProfile = localStorage.getItem('userProfile');
+      if (savedProfile) {
+        setProfile(JSON.parse(savedProfile));
+      }
+      const savedQuests = localStorage.getItem('userQuests');
+      if (savedQuests) {
+        setQuests(JSON.parse(savedQuests));
+      }
+    } catch (error) {
+      console.error("Failed to load data from localStorage", error);
+    } finally {
+        setIsLoaded(true);
+    }
+  }, []);
+
+  // Save profile to localStorage whenever it changes
+  useEffect(() => {
+    if (isLoaded) {
+      try {
+        localStorage.setItem('userProfile', JSON.stringify(profile));
+      } catch (error) {
+        console.error("Failed to save profile to localStorage", error);
+      }
+    }
+  }, [profile, isLoaded]);
+
+  // Save quests to localStorage whenever they change
+  useEffect(() => {
+     if (isLoaded) {
+      try {
+        localStorage.setItem('userQuests', JSON.stringify(quests));
+      } catch (error) {
+        console.error("Failed to save quests to localStorage", error);
+      }
+    }
+  }, [quests, isLoaded]);
 
   const addQuest = (questData: Omit<Quest, 'id' | 'isCompleted'>) => {
     const newQuest: Quest = {
@@ -49,15 +90,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     const newXp = profile.xp + quest.xp;
     if (newXp >= profile.xpToNextLevel) {
+      const newLevel = profile.level + 1;
       setProfile({
         ...profile,
-        level: profile.level + 1,
+        level: newLevel,
         xp: newXp - profile.xpToNextLevel,
         xpToNextLevel: Math.floor(profile.xpToNextLevel * 1.5),
       });
       toast({
         title: "Level Up!",
-        description: `Congratulations! You've reached Level ${profile.level + 1}.`,
+        description: `Congratulations! You've reached Level ${newLevel}.`,
       });
     } else {
       setProfile({ ...profile, xp: newXp });
@@ -68,6 +110,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       description: `You earned ${quest.xp} XP for completing "${quest.title}".`,
     });
   };
+
+  if (!isLoaded) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <UserContext.Provider value={{ profile, quests, setQuests, addQuest, editQuest, deleteQuest, completeQuest }}>
