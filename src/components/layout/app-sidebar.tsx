@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { usePathname } from 'next/navigation';
@@ -10,6 +11,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  SidebarTrigger
 } from "@/components/ui/sidebar";
 import {
   Flame,
@@ -27,11 +29,12 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader>
+      <SidebarHeader className="flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 p-2">
             <Flame className="w-8 h-8 text-primary" />
-            <span className="text-2xl font-headline font-semibold">LifeQuest</span>
+            <span className="text-2xl font-headline font-semibold group-data-[collapsible=icon]:hidden">LifeQuest</span>
         </Link>
+        <SidebarTrigger className="hidden md:flex" />
       </SidebarHeader>
       <SidebarMenu className="flex-1">
         <SidebarMenuItem>
