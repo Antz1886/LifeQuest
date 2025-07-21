@@ -14,7 +14,7 @@ import { FocusMode } from "@/components/dashboard/focus-mode";
 import { Button } from "@/components/ui/button";
 import { Target } from "lucide-react";
 
-export default function Home() {
+function DashboardContent() {
   return (
     <UserProvider>
       <SidebarProvider>
@@ -39,5 +39,10 @@ export default function Home() {
         </div>
       </SidebarProvider>
     </UserProvider>
-  );
+  )
+}
+
+
+export default function Home() {
+  return <DashboardContent/>
 }

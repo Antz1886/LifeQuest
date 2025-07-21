@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { userProfile as initialProfile, quests as initialQuests } from '@/lib/mock-data';
 import type { UserProfile, Quest, Project, ProjectTask } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from './auth-context';
 
 interface UserContextType {
   profile: UserProfile;
@@ -23,66 +24,89 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile>(initialProfile);
   const [quests, setQuests] = useState<Quest[]>(initialQuests);
   const [projects, setProjects] = useState<Project[]>([]);
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load state from localStorage on initial client-side render
+  // Derive a unique key for the user, falling back to a default for guests.
+  const userKey = user ? user.uid : 'guest';
+
+  // Load state from localStorage on initial client-side render, based on user
   useEffect(() => {
+    if (!user && !isLoaded) {
+      // If no user is logged in, but we haven't loaded, set loaded to true.
+      setIsLoaded(true);
+      return
+    }
+    if (!user) return; // Don't load data if user is not logged in
+
+    setIsLoaded(false); // Start loading for the new user
     try {
-      const savedProfile = localStorage.getItem('userProfile');
+      const savedProfile = localStorage.getItem(`userProfile_${userKey}`);
       if (savedProfile) {
         setProfile(JSON.parse(savedProfile));
+      } else {
+        // If no profile, set a default one using user's name
+        const displayName = user.displayName || "Adventurer";
+        setProfile({ ...initialProfile, name: displayName });
       }
-      const savedQuests = localStorage.getItem('userQuests');
-      if (savedQuests) {
-        setQuests(JSON.parse(savedQuests));
-      }
-      const savedProjects = localStorage.getItem('userProjects');
-      if (savedProjects) {
-        setProjects(JSON.parse(savedProjects));
-      }
+
+      const savedQuests = localStorage.getItem(`userQuests_${userKey}`);
+      if (savedQuests) setQuests(JSON.parse(savedQuests));
+      else setQuests(initialQuests);
+
+
+      const savedProjects = localStorage.getItem(`userProjects_${userKey}`);
+      if (savedProjects) setProjects(JSON.parse(savedProjects));
+      else setProjects([]);
+
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
+      // Reset to defaults on error
+      const displayName = user.displayName || "Adventurer";
+      setProfile({ ...initialProfile, name: displayName });
+      setQuests(initialQuests);
+      setProjects([]);
     } finally {
         setIsLoaded(true);
     }
-  }, []);
+  }, [user, userKey]);
 
   // Save profile to localStorage whenever it changes
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && user) {
       try {
-        localStorage.setItem('userProfile', JSON.stringify(profile));
+        localStorage.setItem(`userProfile_${userKey}`, JSON.stringify(profile));
       } catch (error) {
         console.error("Failed to save profile to localStorage", error);
       }
     }
-  }, [profile, isLoaded]);
+  }, [profile, isLoaded, user, userKey]);
 
   // Save quests to localStorage whenever they change
   useEffect(() => {
-     if (isLoaded) {
+     if (isLoaded && user) {
       try {
-        localStorage.setItem('userQuests', JSON.stringify(quests));
+        localStorage.setItem(`userQuests_${userKey}`, JSON.stringify(quests));
       } catch (error) {
         console.error("Failed to save quests to localStorage", error);
       }
     }
-  }, [quests, isLoaded]);
+  }, [quests, isLoaded, user, userKey]);
 
   // Save projects to localStorage whenever they change
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && user) {
      try {
-       localStorage.setItem('userProjects', JSON.stringify(projects));
+       localStorage.setItem(`userProjects_${userKey}`, JSON.stringify(projects));
      } catch (error) {
        console.error("Failed to save projects to localStorage", error);
      }
    }
- }, [projects, isLoaded]);
+ }, [projects, isLoaded, user, userKey]);
 
   const addQuest = (questData: Omit<Quest, 'id' | 'isCompleted'>) => {
     const newQuest: Quest = {
@@ -176,8 +200,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  if (!isLoaded) {
-    return null; // Or a loading spinner
+  if (!isLoaded || !user) {
+    return <div className="flex w-full h-screen items-center justify-center">Loading User Data...</div>;
   }
 
   return (

@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { usePathname } from 'next/navigation';
@@ -22,10 +21,15 @@ import {
   BrainCircuit,
   Settings,
   User,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from '@/context/auth-context';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   return (
     <Sidebar>
@@ -79,16 +83,27 @@ export function AppSidebar() {
         </SidebarMenuItem>
       </SidebarMenu>
       <SidebarFooter>
-         <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Profile" disabled>
-            <User />
-            <span>Profile</span>
-          </SidebarMenuButton>
+        <SidebarMenuItem>
+            <SidebarMenuButton tooltip="Profile" disabled>
+                <div className="flex items-center gap-2">
+                    <Avatar className="w-7 h-7">
+                        <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'}/>
+                        <AvatarFallback>{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                    </Avatar>
+                    <span>{user?.displayName}</span>
+                </div>
+            </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Settings" disabled>
             <Settings />
             <span>Settings</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton tooltip="Logout" onClick={logout}>
+            <LogOut />
+            <span>Logout</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarFooter>
