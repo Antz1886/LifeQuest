@@ -139,6 +139,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       saveData();
   }, [saveData]);
 
+
   // Recalculate streaks and update profile state when quests change
   useEffect(() => {
     if (isLoaded) {
@@ -197,11 +198,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setProfile({ ...profile, xp: newXp });
         }
-        
-        toast({
-          title: "Quest Completed!",
-          description: `You earned ${quest.xp} XP for completing "${quest.title}".`,
-        });
     } else {
         // Handle de-leveling if necessary (optional, but good for consistency)
         if (newXp < 0) {
