@@ -11,6 +11,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { QuestCategory } from '@/lib/types';
+import { getCurrentWeather } from '@/services/weather';
 
 const QuestCategorySchema = z.enum(["Mind", "Strength", "Code", "Wisdom", "Legacy"]);
 
@@ -25,6 +26,7 @@ const QuestSchema = z.object({
 
 const GenerateQuestsInputSchema = z.object({
   goals: z.string().describe("The user's high-level goals for the day."),
+  location: z.string().default('Mountain View, CA').describe("The user's current location."),
 });
 export type GenerateQuestsInput = z.infer<typeof GenerateQuestsInputSchema>;
 
@@ -38,10 +40,21 @@ export async function generateQuests(input: GenerateQuestsInput): Promise<Genera
   return generateQuestsFlow(input);
 }
 
+const getWeatherTool = ai.defineTool(
+    {
+        name: 'getCurrentWeather',
+        description: 'Get the current weather for a specified location to suggest weather-appropriate activities.',
+        inputSchema: z.object({ location: z.string() }),
+        outputSchema: z.string(),
+    },
+    async ({ location }) => getCurrentWeather(location)
+);
+
 const prompt = ai.definePrompt({
   name: 'generateQuestsPrompt',
   input: { schema: GenerateQuestsInputSchema },
   output: { schema: GenerateQuestsOutputSchema },
+  tools: [getWeatherTool],
   prompt: `You are a productivity assistant for a gamified life app called LifeQuest. Your task is to transform a user's daily goals into a list of actionable "quests".
 
 User's Profile:
@@ -57,6 +70,11 @@ Quest Categories:
 - Legacy: Career tasks, business development, networking.
 
 Based on the user's goals below, create a list of 5-7 quests. Each quest should be specific, actionable, and aligned with one of the categories. Assign appropriate XP based on the quest's difficulty and duration. All quests should be generated with 'isCompleted' set to false.
+
+IMPORTANT: Use the 'getCurrentWeather' tool to check the weather for the user's location. Suggest weather-appropriate activities. For example, if it's sunny, suggest an outdoor 'Strength' or 'Mind' quest. If it's rainy, suggest an indoor one.
+
+User's Location:
+{{{location}}}
 
 User's Goals:
 {{{goals}}}
