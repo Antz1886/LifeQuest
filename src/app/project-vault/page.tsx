@@ -119,7 +119,20 @@ function ProjectVaultContent() {
     )
 }
 
-function ProjectVaultPageLayout() {
+export default function ProjectVaultPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
+  }
+
   return (
     <UserProvider>
         <SidebarProvider>
@@ -136,21 +149,4 @@ function ProjectVaultPageLayout() {
         </SidebarProvider>
     </UserProvider>
   )
-}
-
-export default function ProjectVaultPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user) {
-    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
-  }
-
-  return <ProjectVaultPageLayout />;
 }

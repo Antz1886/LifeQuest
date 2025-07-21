@@ -14,7 +14,20 @@ import { QuestBoard } from "@/components/dashboard/quest-board";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-function DashboardContent() {
+export default function ProtectedHome() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
+  }
+
   return (
     <UserProvider>
       <SidebarProvider>
@@ -34,21 +47,4 @@ function DashboardContent() {
       </SidebarProvider>
     </UserProvider>
   )
-}
-
-export default function ProtectedHome() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user) {
-    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
-  }
-
-  return <DashboardContent />;
 }

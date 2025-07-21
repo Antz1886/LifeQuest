@@ -81,7 +81,20 @@ function ProgressLogContent() {
     )
 }
 
-function ProgressLogPageLayout() {
+export default function ProgressLogPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
+  }
+
   return (
     <UserProvider>
      <SidebarProvider>
@@ -98,21 +111,4 @@ function ProgressLogPageLayout() {
       </SidebarProvider>
     </UserProvider>
   )
-}
-
-export default function ProgressLogPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user) {
-    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
-  }
-
-  return <ProgressLogPageLayout />;
 }

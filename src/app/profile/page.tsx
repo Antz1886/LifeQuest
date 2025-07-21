@@ -14,32 +14,6 @@ import { useAuth } from "@/context/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-function ProfileContent() {
-    return (
-      <UserProvider>
-        <SidebarProvider>
-            <div className="flex min-h-screen">
-            <AppSidebar />
-            <SidebarInset className="flex-1">
-                <header className="flex items-center justify-between p-4 border-b">
-                <SidebarTrigger className="md:hidden"/>
-                <h1 className="text-2xl font-headline font-semibold">Your Profile</h1>
-                </header>
-                <main className="p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-1">
-                        <UserProfileCard />
-                    </div>
-                    <div className="lg:col-span-2">
-                        <ProfileCustomizer />
-                    </div>
-                </main>
-            </SidebarInset>
-            </div>
-        </SidebarProvider>
-      </UserProvider>
-    )
-}
-
 export default function ProfilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -54,5 +28,27 @@ export default function ProfilePage() {
     return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
   }
 
-  return <ProfileContent />;
+  return (
+    <UserProvider>
+      <SidebarProvider>
+          <div className="flex min-h-screen">
+          <AppSidebar />
+          <SidebarInset className="flex-1">
+              <header className="flex items-center justify-between p-4 border-b">
+              <SidebarTrigger className="md:hidden"/>
+              <h1 className="text-2xl font-headline font-semibold">Your Profile</h1>
+              </header>
+              <main className="p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-1">
+                      <UserProfileCard />
+                  </div>
+                  <div className="lg:col-span-2">
+                      <ProfileCustomizer />
+                  </div>
+              </main>
+          </SidebarInset>
+          </div>
+      </SidebarProvider>
+    </UserProvider>
+  )
 }
