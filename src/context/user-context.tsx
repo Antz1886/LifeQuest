@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 interface UserContextType {
   profile: UserProfile;
   quests: Quest[];
+  setQuests: (quests: Quest[]) => void;
   completeQuest: (questId: string) => void;
 }
 
@@ -48,7 +49,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <UserContext.Provider value={{ profile, quests, completeQuest }}>
+    <UserContext.Provider value={{ profile, quests, setQuests, completeQuest }}>
       {children}
     </UserContext.Provider>
   );

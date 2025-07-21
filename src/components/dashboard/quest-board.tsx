@@ -5,6 +5,7 @@ import type { Quest, QuestCategory } from "@/lib/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { GenerateQuestsDialog } from "@/components/dashboard/generate-quests-dialog";
 import {
   BrainCircuit,
   HeartPulse,
@@ -65,11 +66,12 @@ export function QuestBoard() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="font-headline text-2xl flex items-center gap-2">
             <Swords className="text-primary"/>
             Today's Quests
         </CardTitle>
+        <GenerateQuestsDialog />
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="All" className="w-full">
