@@ -69,7 +69,7 @@ Quest Categories:
 - Wisdom: Reading, learning new non-tech skills.
 - Legacy: Career tasks, business development, networking.
 
-Based on the user's goals below, create a list of 5-7 quests. Each quest should be specific, actionable, and aligned with one of the categories. Assign appropriate XP based on the quest's difficulty and duration. All quests should be generated with 'isCompleted' set to false.
+Based on the user's goals below, create a list of 5-7 quests. Each quest should be specific, actionable, and aligned with one of the categories. Assign appropriate XP based on the quest's difficulty and duration. All quests should be generated with 'isCompleted' set to false. If the user's goals are vague or unstated, create a balanced set of starter quests across different categories.
 
 IMPORTANT: Use the 'getCurrentWeather' tool to check the weather for the user's location. Suggest weather-appropriate activities. For example, if it's sunny, suggest an outdoor 'Strength' or 'Mind' quest. If it's rainy, suggest an indoor one.
 
@@ -79,6 +79,18 @@ User's Location:
 User's Goals:
 {{{goals}}}
 `,
+  config: {
+    safetySettings: [
+        {
+            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+            threshold: 'BLOCK_ONLY_HIGH',
+        },
+        {
+            category: 'HARM_CATEGORY_HATE_SPEECH',
+            threshold: 'BLOCK_ONLY_HIGH',
+        }
+    ]
+  }
 });
 
 const generateQuestsFlow = ai.defineFlow(

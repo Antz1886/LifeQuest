@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { userProfile as initialProfile, quests as initialQuests } from '@/lib/mock-data';
 import type { UserProfile, Quest, Project, ProjectTask } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,7 @@ interface UserContextType {
   addProject: (projectData: Omit<Project, 'id' | 'tasks'>) => void;
   toggleProjectTask: (projectId: string, taskId: string) => void;
   addProjectTask: (projectId: string, taskText: string) => void;
+  isLoaded: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -31,82 +32,51 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Derive a unique key for the user, falling back to a default for guests.
   const userKey = user ? user.uid : 'guest';
 
-  // Load state from localStorage on initial client-side render, based on user
+  // Load data from localStorage
   useEffect(() => {
-    if (!user && !isLoaded) {
-      // If no user is logged in, but we haven't loaded, set loaded to true.
-      setIsLoaded(true);
-      return
-    }
-    if (!user) return; // Don't load data if user is not logged in
+    if (!user) return; // Don't load if no user
 
-    setIsLoaded(false); // Start loading for the new user
     try {
       const savedProfile = localStorage.getItem(`userProfile_${userKey}`);
       if (savedProfile) {
         setProfile(JSON.parse(savedProfile));
       } else {
-        // If no profile, set a default one using user's name
         const displayName = user.displayName || "Adventurer";
         setProfile({ ...initialProfile, name: displayName });
       }
 
       const savedQuests = localStorage.getItem(`userQuests_${userKey}`);
-      if (savedQuests) setQuests(JSON.parse(savedQuests));
-      else setQuests(initialQuests);
-
+      setQuests(savedQuests ? JSON.parse(savedQuests) : initialQuests);
 
       const savedProjects = localStorage.getItem(`userProjects_${userKey}`);
-      if (savedProjects) setProjects(JSON.parse(savedProjects));
-      else setProjects([]);
+      setProjects(savedProjects ? JSON.parse(savedProjects) : []);
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
-      // Reset to defaults on error
       const displayName = user.displayName || "Adventurer";
       setProfile({ ...initialProfile, name: displayName });
       setQuests(initialQuests);
       setProjects([]);
     } finally {
-        setIsLoaded(true);
+      setIsLoaded(true);
     }
   }, [user, userKey]);
 
-  // Save profile to localStorage whenever it changes
+  // Save data to localStorage
   useEffect(() => {
     if (isLoaded && user) {
       try {
         localStorage.setItem(`userProfile_${userKey}`, JSON.stringify(profile));
-      } catch (error) {
-        console.error("Failed to save profile to localStorage", error);
-      }
-    }
-  }, [profile, isLoaded, user, userKey]);
-
-  // Save quests to localStorage whenever they change
-  useEffect(() => {
-     if (isLoaded && user) {
-      try {
         localStorage.setItem(`userQuests_${userKey}`, JSON.stringify(quests));
+        localStorage.setItem(`userProjects_${userKey}`, JSON.stringify(projects));
       } catch (error) {
-        console.error("Failed to save quests to localStorage", error);
+        console.error("Failed to save data to localStorage", error);
       }
     }
-  }, [quests, isLoaded, user, userKey]);
+  }, [profile, quests, projects, isLoaded, user, userKey]);
 
-  // Save projects to localStorage whenever they change
-  useEffect(() => {
-    if (isLoaded && user) {
-     try {
-       localStorage.setItem(`userProjects_${userKey}`, JSON.stringify(projects));
-     } catch (error) {
-       console.error("Failed to save projects to localStorage", error);
-     }
-   }
- }, [projects, isLoaded, user, userKey]);
 
   const addQuest = (questData: Omit<Quest, 'id' | 'isCompleted'>) => {
     const newQuest: Quest = {
@@ -200,12 +170,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  if (!isLoaded || !user) {
+  if (!isLoaded && user) {
     return <div className="flex w-full h-screen items-center justify-center">Loading User Data...</div>;
   }
 
   return (
-    <UserContext.Provider value={{ profile, quests, projects, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask }}>
+    <UserContext.Provider value={{ profile, quests, projects, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask, isLoaded }}>
       {children}
     </UserContext.Provider>
   );

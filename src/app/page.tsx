@@ -2,6 +2,7 @@
 "use client";
 
 import { UserProvider } from "@/context/user-context";
+import { AuthProvider, useAuth } from "@/context/auth-context";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import {
   SidebarProvider,
@@ -13,6 +14,8 @@ import { QuestBoard } from "@/components/dashboard/quest-board";
 import { FocusMode } from "@/components/dashboard/focus-mode";
 import { Button } from "@/components/ui/button";
 import { Target } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 function DashboardContent() {
   return (
@@ -42,7 +45,19 @@ function DashboardContent() {
   )
 }
 
+export default function ProtectedHome() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
-export default function Home() {
-  return <DashboardContent/>
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+
+  return <DashboardContent />;
 }

@@ -92,21 +92,27 @@ function ZenZoneContent() {
     )
 }
 
+function ZenZonePageLayout() {
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen">
+        <AppSidebar />
+        <SidebarInset className="flex-1">
+          <header className="flex items-center justify-between p-4 border-b">
+             <SidebarTrigger className="md:hidden"/>
+             <h1 className="text-2xl font-headline font-semibold">Zen Zone</h1>
+          </header>
+          <ZenZoneContent />
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
+  )
+}
+
 export default function ZenZonePage() {
   return (
     <UserProvider>
-      <SidebarProvider>
-        <div className="flex min-h-screen">
-          <AppSidebar />
-          <SidebarInset className="flex-1">
-            <header className="flex items-center justify-between p-4 border-b">
-               <SidebarTrigger className="md:hidden"/>
-               <h1 className="text-2xl font-headline font-semibold">Zen Zone</h1>
-            </header>
-            <ZenZoneContent />
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+      <ZenZonePageLayout />
     </UserProvider>
   );
 }

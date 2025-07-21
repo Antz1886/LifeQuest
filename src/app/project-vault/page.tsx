@@ -23,16 +23,18 @@ function AddTaskForm({ projectId }: { projectId: string }) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!taskText.trim()) return;
         addProjectTask(projectId, taskText);
         setTaskText("");
     };
 
     return (
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form onSubmit={handleSubmit} className="flex gap-2 w-full">
             <Input
                 placeholder="Add a new task..."
                 value={taskText}
                 onChange={(e) => setTaskText(e.target.value)}
+                className="flex-grow"
             />
             <Button type="submit" size="sm">Add</Button>
         </form>
@@ -93,9 +95,9 @@ function ProjectVaultContent() {
                                         <div className="space-y-2">
                                             <h4 className="font-semibold text-sm">Tasks</h4>
                                             {project.tasks.length > 0 ? project.tasks.map(task => (
-                                                <div key={task.id} className="flex items-center gap-2 cursor-pointer" onClick={() => toggleProjectTask(project.id, task.id)}>
-                                                    {task.isCompleted ? <Check className="w-4 h-4 text-primary" /> : <Circle className="w-4 h-4 text-muted-foreground/50" />}
-                                                    <span className={`text-sm ${task.isCompleted ? 'line-through text-muted-foreground' : ''}`}>{task.text}</span>
+                                                <div key={task.id} className="flex items-center gap-2 cursor-pointer group" onClick={() => toggleProjectTask(project.id, task.id)}>
+                                                    {task.isCompleted ? <Check className="w-4 h-4 text-primary flex-shrink-0" /> : <Circle className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />}
+                                                    <span className={`text-sm break-all ${task.isCompleted ? 'line-through text-muted-foreground' : ''}`}>{task.text}</span>
                                                 </div>
                                             )) : <p className="text-sm text-muted-foreground italic">No tasks yet.</p>}
                                         </div>
@@ -114,21 +116,27 @@ function ProjectVaultContent() {
     )
 }
 
+function ProjectVaultPageLayout() {
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen">
+        <AppSidebar />
+        <SidebarInset className="flex-1">
+          <header className="flex items-center justify-between p-4 border-b">
+              <SidebarTrigger className="md:hidden"/>
+              <h1 className="text-2xl font-headline font-semibold">Project Vault</h1>
+          </header>
+          <ProjectVaultContent />
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
+  )
+}
+
 export default function ProjectVaultPage() {
   return (
     <UserProvider>
-      <SidebarProvider>
-        <div className="flex min-h-screen">
-          <AppSidebar />
-          <SidebarInset className="flex-1">
-            <header className="flex items-center justify-between p-4 border-b">
-               <SidebarTrigger className="md:hidden"/>
-               <h1 className="text-2xl font-headline font-semibold">Project Vault</h1>
-            </header>
-            <ProjectVaultContent />
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+      <ProjectVaultPageLayout />
     </UserProvider>
   );
 }

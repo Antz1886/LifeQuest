@@ -78,10 +78,9 @@ function ProgressLogContent() {
     )
 }
 
-export default function ProgressLogPage() {
+function ProgressLogPageLayout() {
   return (
-    <UserProvider>
-      <SidebarProvider>
+     <SidebarProvider>
         <div className="flex min-h-screen">
           <AppSidebar />
           <SidebarInset className="flex-1">
@@ -93,6 +92,13 @@ export default function ProgressLogPage() {
           </SidebarInset>
         </div>
       </SidebarProvider>
+  )
+}
+
+export default function ProgressLogPage() {
+  return (
+    <UserProvider>
+      <ProgressLogPageLayout />
     </UserProvider>
   );
 }

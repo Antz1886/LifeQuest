@@ -24,12 +24,16 @@ import {
   LogOut,
 } from "lucide-react";
 import { useAuth } from '@/context/auth-context';
+import { useUser } from '@/context/user-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 export function AppSidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { profile, isLoaded } = useUser();
+
+  const displayName = isLoaded ? profile.name : (user?.displayName || 'Adventurer');
 
   return (
     <Sidebar>
@@ -87,10 +91,10 @@ export function AppSidebar() {
             <SidebarMenuButton tooltip="Profile" disabled>
                 <div className="flex items-center gap-2">
                     <Avatar className="w-7 h-7">
-                        <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'}/>
-                        <AvatarFallback>{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                        <AvatarImage src={user?.photoURL || ''} alt={displayName}/>
+                        <AvatarFallback>{displayName.charAt(0) || 'U'}</AvatarFallback>
                     </Avatar>
-                    <span>{user?.displayName}</span>
+                    <span className="truncate">{displayName}</span>
                 </div>
             </SidebarMenuButton>
         </SidebarMenuItem>
