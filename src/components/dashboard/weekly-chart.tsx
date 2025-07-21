@@ -4,7 +4,7 @@
 import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useUser } from "@/context/user-context";
-import { subDays, format } from "date-fns";
+import { subDays, format, isSameDay, startOfDay } from "date-fns";
 import type { Quest, QuestCategory } from "@/lib/types";
 
 const categoryColors: Record<QuestCategory, string> = {
@@ -21,7 +21,7 @@ export function WeeklyChart() {
 
   const weeklyData = useMemo(() => {
     const data: { name: string; [key: string]: any }[] = [];
-    const today = new Date();
+    const today = startOfDay(new Date());
     
     // Create data points for the last 7 days
     for (let i = 6; i >= 0; i--) {
@@ -35,21 +35,24 @@ export function WeeklyChart() {
         Code: 0,
         Wisdom: 0,
         Legacy: 0,
+        date: date, // Store the date for matching
       });
     }
 
-    // This is a simplified logic. In a real app, quests would have a completion date.
-    // For this prototype, we'll randomly distribute completed quests across the week.
+    // Distribute completed quests to the correct day
     quests.forEach((quest: Quest) => {
-      if (quest.isCompleted) {
-        const randomDayIndex = Math.floor(Math.random() * 7);
-        if (data[randomDayIndex]) {
-            data[randomDayIndex][quest.category] += 1;
+      if (quest.isCompleted && quest.completedAt) {
+        const completionDay = startOfDay(new Date(quest.completedAt));
+        const dayData = data.find(d => isSameDay(d.date, completionDay));
+        if (dayData) {
+            dayData[quest.category] = (dayData[quest.category] || 0) + 1;
         }
       }
     });
+    
+    // Clean up the date property before rendering
+    return data.map(({date, ...remaning}) => remaning);
 
-    return data;
   }, [quests]);
 
   return (

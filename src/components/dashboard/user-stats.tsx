@@ -10,7 +10,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, Dumbbell, BookOpen, BrainCircuit } from 'lucide-react';
+import { Flame, Dumbbell, Code, BrainCircuit } from 'lucide-react';
 
 export function UserStats() {
   const { profile } = useUser();
@@ -38,16 +38,16 @@ export function UserStats() {
           </div>
           <Progress value={xpPercentage} className="h-3 [&>div]:bg-accent" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4">
           <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
-            <TrendingUp className="w-8 h-8 text-primary"/>
+            <Dumbbell className="w-8 h-8 text-primary"/>
             <div>
               <p className="font-bold text-lg">{profile.streaks.gym} Days</p>
               <p className="text-sm text-muted-foreground">Gym Streak</p>
             </div>
           </div>
            <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
-            <BookOpen className="w-8 h-8 text-primary"/>
+            <Code className="w-8 h-8 text-primary"/>
             <div>
               <p className="font-bold text-lg">{profile.streaks.code} Days</p>
               <p className="text-sm text-muted-foreground">Code Streak</p>
@@ -58,13 +58,6 @@ export function UserStats() {
             <div>
               <p className="font-bold text-lg">{profile.streaks.meditation} Days</p>
               <p className="text-sm text-muted-foreground">Mindful Streak</p>
-            </div>
-          </div>
-           <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
-            <Dumbbell className="w-8 h-8 text-primary"/>
-            <div>
-              <p className="font-bold text-lg">Buff Badge</p>
-              <p className="text-sm text-muted-foreground">Fitness</p>
             </div>
           </div>
         </div>

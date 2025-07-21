@@ -3,16 +3,66 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { userProfile as initialProfile, quests as initialQuests } from '@/lib/mock-data';
-import type { UserProfile, Quest, Project, ProjectTask } from '@/lib/types';
+import type { UserProfile, Quest, Project, ProjectTask, QuestCategory } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './auth-context';
+import { isSameDay, subDays, startOfDay } from 'date-fns';
+
+
+// Helper function to calculate streaks
+const calculateStreaks = (completedQuests: Quest[]) => {
+    const streaks = { gym: 0, meditation: 0, code: 0 };
+    const categoryMap: { [key in QuestCategory]?: keyof typeof streaks } = {
+        'Strength': 'gym',
+        'Mind': 'meditation',
+        'Code': 'code'
+    };
+
+    const sortedQuests = completedQuests
+        .filter(q => q.completedAt && q.category in categoryMap)
+        .sort((a, b) => b.completedAt! - a.completedAt!);
+
+    const calculateStreakForCategory = (cat: keyof typeof streaks) => {
+        let streak = 0;
+        let currentDate = startOfDay(new Date());
+        
+        const categoryQuests = sortedQuests.filter(q => categoryMap[q.category] === cat);
+        const uniqueDays = Array.from(new Set(categoryQuests.map(q => startOfDay(q.completedAt!).getTime()))).sort((a,b) => b-a);
+        
+        if (uniqueDays.length === 0) return 0;
+        
+        // Check if there's a completion today or yesterday
+        if (isSameDay(uniqueDays[0], currentDate) || isSameDay(uniqueDays[0], subDays(currentDate, 1))) {
+           streak = 1;
+           let lastDate = startOfDay(uniqueDays[0]);
+
+           for (let i = 1; i < uniqueDays.length; i++) {
+               const day = startOfDay(uniqueDays[i]);
+               if (isSameDay(day, subDays(lastDate, 1))) {
+                   streak++;
+                   lastDate = day;
+               } else {
+                   break;
+               }
+           }
+        }
+        return streak;
+    }
+
+    streaks.gym = calculateStreakForCategory('gym');
+    streaks.meditation = calculateStreakForCategory('meditation');
+    streaks.code = calculateStreakForCategory('code');
+
+    return streaks;
+};
+
 
 interface UserContextType {
   profile: UserProfile;
   quests: Quest[];
   projects: Project[];
   setQuests: (quests: Quest[]) => void;
-  addQuest: (questData: Omit<Quest, 'id' | 'isCompleted'>) => void;
+  addQuest: (questData: Omit<Quest, 'id' | 'isCompleted' | 'completedAt'>) => void;
   editQuest: (updatedQuest: Quest) => void;
   deleteQuest: (questId: string) => void;
   completeQuest: (questId: string) => void;
@@ -41,20 +91,24 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const savedProfile = localStorage.getItem(`userProfile_${userKey}`);
+      const savedQuests = localStorage.getItem(`userQuests_${userKey}`);
+      const savedProjects = localStorage.getItem(`userProjects_${userKey}`);
+
+      const loadedQuests = savedQuests ? JSON.parse(savedQuests) : initialQuests;
+      const completedQuests = loadedQuests.filter((q: Quest) => q.isCompleted);
+      const calculatedStreaks = calculateStreaks(completedQuests);
+      
       if (savedProfile) {
         const parsedProfile = JSON.parse(savedProfile);
         const displayName = user.displayName || "Adventurer";
-        // Ensure name is updated from Google profile, but keep rest of saved data
-        setProfile({ ...initialProfile, ...parsedProfile, name: displayName });
+        // Ensure name is updated from Google profile, and streaks are recalculated
+        setProfile({ ...initialProfile, ...parsedProfile, name: displayName, streaks: calculatedStreaks });
       } else {
         const displayName = user.displayName || "Adventurer";
-        setProfile({ ...initialProfile, name: displayName });
+        setProfile({ ...initialProfile, name: displayName, streaks: calculatedStreaks });
       }
 
-      const savedQuests = localStorage.getItem(`userQuests_${userKey}`);
-      setQuests(savedQuests ? JSON.parse(savedQuests) : initialQuests);
-
-      const savedProjects = localStorage.getItem(`userProjects_${userKey}`);
+      setQuests(loadedQuests);
       setProjects(savedProjects ? JSON.parse(savedProjects) : []);
 
     } catch (error) {
@@ -72,17 +126,26 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (isLoaded && user) {
       try {
-        localStorage.setItem(`userProfile_${userKey}`, JSON.stringify(profile));
+        const completedQuests = quests.filter(q => q.isCompleted);
+        const updatedStreaks = calculateStreaks(completedQuests);
+        const updatedProfile = {...profile, streaks: updatedStreaks };
+        
+        localStorage.setItem(`userProfile_${userKey}`, JSON.stringify(updatedProfile));
         localStorage.setItem(`userQuests_${userKey}`, JSON.stringify(quests));
         localStorage.setItem(`userProjects_${userKey}`, JSON.stringify(projects));
+
+        // Update state after calculating streaks
+        setProfile(updatedProfile);
+
       } catch (error) {
         console.error("Failed to save data to localStorage", error);
       }
     }
-  }, [profile, quests, projects, isLoaded, user, userKey]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quests, projects, isLoaded, user, userKey]);
 
 
-  const addQuest = (questData: Omit<Quest, 'id' | 'isCompleted'>) => {
+  const addQuest = (questData: Omit<Quest, 'id' | 'isCompleted' | 'completedAt'>) => {
     const newQuest: Quest = {
       ...questData,
       id: `q-${Date.now()}-${Math.random()}`,
@@ -104,7 +167,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const quest = quests.find(q => q.id === questId);
     if (!quest || quest.isCompleted) return;
 
-    setQuests(quests.map(q => q.id === questId ? { ...q, isCompleted: true } : q));
+    setQuests(prevQuests => prevQuests.map(q => q.id === questId ? { ...q, isCompleted: true, completedAt: Date.now() } : q));
 
     const newXp = profile.xp + quest.xp;
     if (newXp >= profile.xpToNextLevel) {
