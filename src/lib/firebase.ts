@@ -5,7 +5,7 @@ import { initializeApp, getApps, getApp, FirebaseOptions } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "YOUR_API_KEY",
+  apiKey: "YOUR_API_KEY_REDACTED",
   authDomain: "lifequest-cc4l7.firebaseapp.com",
   projectId: "lifequest-cc4l7",
   storageBucket: "lifequest-cc4l7.appspot.com",
