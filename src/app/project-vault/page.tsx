@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UserProvider } from "@/context/user-context";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import {
@@ -16,6 +16,9 @@ import { Archive, PlusCircle, Check, Circle } from "lucide-react";
 import { AddProjectDialog } from "@/components/project-vault/add-project-dialog";
 import { useUser } from "@/context/user-context";
 import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@/context/auth-context";
+import { useRouter } from "next/navigation";
+
 
 function AddTaskForm({ projectId }: { projectId: string }) {
     const [taskText, setTaskText] = useState("");
@@ -118,25 +121,36 @@ function ProjectVaultContent() {
 
 function ProjectVaultPageLayout() {
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen">
-        <AppSidebar />
-        <SidebarInset className="flex-1">
-          <header className="flex items-center justify-between p-4 border-b">
-              <SidebarTrigger className="md:hidden"/>
-              <h1 className="text-2xl font-headline font-semibold">Project Vault</h1>
-          </header>
-          <ProjectVaultContent />
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    <UserProvider>
+        <SidebarProvider>
+        <div className="flex min-h-screen">
+            <AppSidebar />
+            <SidebarInset className="flex-1">
+            <header className="flex items-center justify-between p-4 border-b">
+                <SidebarTrigger className="md:hidden"/>
+                <h1 className="text-2xl font-headline font-semibold">Project Vault</h1>
+            </header>
+            <ProjectVaultContent />
+            </SidebarInset>
+        </div>
+        </SidebarProvider>
+    </UserProvider>
   )
 }
 
 export default function ProjectVaultPage() {
-  return (
-    <UserProvider>
-      <ProjectVaultPageLayout />
-    </UserProvider>
-  );
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
+  }
+
+  return <ProjectVaultPageLayout />;
 }

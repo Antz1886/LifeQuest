@@ -11,6 +11,9 @@ import {
 import { WeeklyChart } from "@/components/dashboard/weekly-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Map } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 function WeeklyMapContent() {
   return (
@@ -36,25 +39,36 @@ function WeeklyMapContent() {
 
 function WeeklyMapPageLayout() {
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen">
-        <AppSidebar />
-        <SidebarInset className="flex-1">
-          <header className="flex items-center justify-between p-4 border-b">
-             <SidebarTrigger className="md:hidden"/>
-             <h1 className="text-2xl font-headline font-semibold">Weekly Map</h1>
-          </header>
-          <WeeklyMapContent />
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    <UserProvider>
+        <SidebarProvider>
+        <div className="flex min-h-screen">
+            <AppSidebar />
+            <SidebarInset className="flex-1">
+            <header className="flex items-center justify-between p-4 border-b">
+                <SidebarTrigger className="md:hidden"/>
+                <h1 className="text-2xl font-headline font-semibold">Weekly Map</h1>
+            </header>
+            <WeeklyMapContent />
+            </SidebarInset>
+        </div>
+        </SidebarProvider>
+    </UserProvider>
   );
 }
 
 export default function WeeklyMapPage() {
-  return (
-    <UserProvider>
-      <WeeklyMapPageLayout />
-    </UserProvider>
-  )
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
+  }
+
+  return <WeeklyMapPageLayout />;
 }

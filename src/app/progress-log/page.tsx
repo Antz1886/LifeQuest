@@ -12,6 +12,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BarChart3, CheckCircle, Award } from "lucide-react";
 import { useUser } from "@/context/user-context";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/context/auth-context";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 function ProgressLogContent() {
     const { quests, profile } = useUser();
@@ -80,6 +83,7 @@ function ProgressLogContent() {
 
 function ProgressLogPageLayout() {
   return (
+    <UserProvider>
      <SidebarProvider>
         <div className="flex min-h-screen">
           <AppSidebar />
@@ -92,13 +96,23 @@ function ProgressLogPageLayout() {
           </SidebarInset>
         </div>
       </SidebarProvider>
+    </UserProvider>
   )
 }
 
 export default function ProgressLogPage() {
-  return (
-    <UserProvider>
-      <ProgressLogPageLayout />
-    </UserProvider>
-  );
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
+  }
+
+  return <ProgressLogPageLayout />;
 }

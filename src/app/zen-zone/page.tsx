@@ -9,6 +9,9 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { MeditationGenerator } from "@/components/zen-zone/meditation-generator";
+import { useAuth } from "@/context/auth-context";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 function ZenZoneContent() {
     return (
@@ -20,25 +23,36 @@ function ZenZoneContent() {
 
 function ZenZonePageLayout() {
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen">
-        <AppSidebar />
-        <SidebarInset className="flex-1">
-          <header className="flex items-center justify-between p-4 border-b">
-             <SidebarTrigger className="md:hidden"/>
-             <h1 className="text-2xl font-headline font-semibold">Zen Zone</h1>
-          </header>
-          <ZenZoneContent />
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    <UserProvider>
+        <SidebarProvider>
+        <div className="flex min-h-screen">
+            <AppSidebar />
+            <SidebarInset className="flex-1">
+            <header className="flex items-center justify-between p-4 border-b">
+                <SidebarTrigger className="md:hidden"/>
+                <h1 className="text-2xl font-headline font-semibold">Zen Zone</h1>
+            </header>
+            <ZenZoneContent />
+            </SidebarInset>
+        </div>
+        </SidebarProvider>
+    </UserProvider>
   )
 }
 
 export default function ZenZonePage() {
-  return (
-    <UserProvider>
-      <ZenZonePageLayout />
-    </UserProvider>
-  );
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
+  }
+
+  return <ZenZonePageLayout />;
 }
