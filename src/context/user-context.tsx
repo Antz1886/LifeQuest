@@ -123,21 +123,27 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   }, [user, userKey]);
 
   // Save data to localStorage
-  const saveData = useCallback(() => {
-    if (isLoaded && user) {
-      try {
-        localStorage.setItem(`userProfile_${userKey}`, JSON.stringify(profile));
-        localStorage.setItem(`userQuests_${userKey}`, JSON.stringify(quests));
-        localStorage.setItem(`userProjects_${userKey}`, JSON.stringify(projects));
-      } catch (error) {
-        console.error("Failed to save data to localStorage", error);
+  const saveData = useCallback((key: string, data: any) => {
+      if (isLoaded && user) {
+          try {
+              localStorage.setItem(`${key}_${userKey}`, JSON.stringify(data));
+          } catch (error) {
+              console.error("Failed to save data to localStorage", error);
+          }
       }
-    }
-  }, [isLoaded, user, userKey, profile, quests, projects]);
+  }, [isLoaded, user, userKey]);
 
   useEffect(() => {
-      saveData();
-  }, [saveData]);
+    saveData('userProfile', profile);
+  }, [profile, saveData]);
+
+  useEffect(() => {
+    saveData('userQuests', quests);
+  }, [quests, saveData]);
+
+  useEffect(() => {
+    saveData('userProjects', projects);
+  }, [projects, saveData]);
 
 
   // Recalculate streaks and update profile state when quests change
@@ -145,7 +151,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     if (isLoaded) {
       const completedQuests = quests.filter(q => q.isCompleted);
       const updatedStreaks = calculateStreaks(completedQuests);
-      setProfile(prevProfile => ({...prevProfile, streaks: updatedStreaks}));
+      setProfile(prevProfile => {
+        if(JSON.stringify(prevProfile.streaks) !== JSON.stringify(updatedStreaks)) {
+          return {...prevProfile, streaks: updatedStreaks}
+        }
+        return prevProfile;
+      });
     }
   }, [quests, isLoaded]);
 
@@ -180,39 +191,34 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     ));
 
     const xpChange = isNowCompleted ? quest.xp : -quest.xp;
-    const newXp = profile.xp + xpChange;
-
-    if (isNowCompleted) {
-        if (newXp >= profile.xpToNextLevel) {
-          const newLevel = profile.level + 1;
-          setProfile({
-            ...profile,
-            level: newLevel,
-            xp: newXp - profile.xpToNextLevel,
-            xpToNextLevel: Math.floor(profile.xpToNextLevel * 1.5),
-          });
-          toast({
-            title: "Level Up!",
-            description: `Congratulations! You've reached Level ${newLevel}.`,
-          });
+    
+    setProfile(p => {
+        const newXp = p.xp + xpChange;
+        if (isNowCompleted) {
+            if (newXp >= p.xpToNextLevel) {
+              const newLevel = p.level + 1;
+              toast({
+                title: "Level Up!",
+                description: `Congratulations! You've reached Level ${newLevel}.`,
+              });
+              return {
+                ...p,
+                level: newLevel,
+                xp: newXp - p.xpToNextLevel,
+                xpToNextLevel: Math.floor(p.xpToNextLevel * 1.5),
+              };
+            } else {
+              return { ...p, xp: newXp };
+            }
         } else {
-          setProfile({ ...profile, xp: newXp });
+             toast({
+                title: "Quest Undone",
+                description: `Re-added "${quest.title}" to your board.`,
+                variant: "default"
+            });
+            return { ...p, xp: newXp };
         }
-    } else {
-        // Handle de-leveling if necessary (optional, but good for consistency)
-        if (newXp < 0) {
-            // This logic can be complex, for now, just set xp to 0 or handle de-leveling
-            // For simplicity, we'll just adjust XP.
-             setProfile({ ...profile, xp: newXp });
-        } else {
-             setProfile({ ...profile, xp: newXp });
-        }
-        toast({
-            title: "Quest Undone",
-            description: `Re-added "${quest.title}" to your board.`,
-            variant: "default"
-        });
-    }
+    });
   };
 
   const addProject = (projectData: Omit<Project, 'id' | 'tasks'>) => {

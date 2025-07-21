@@ -169,6 +169,9 @@ export function QuestBoard() {
                 {quests.filter((q) => q.category === cat).map((quest) => (
                     <QuestItem key={quest.id} quest={quest} />
                 ))}
+                {quests.filter((q) => q.category === cat).length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">No quests in this category.</p>
+                )}
             </TabsContent>
           ))}
         </Tabs>
