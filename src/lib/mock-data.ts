@@ -1,7 +1,7 @@
 import type { Quest, UserProfile } from "@/lib/types";
 
 export const userProfile: UserProfile = {
-  name: "Alex",
+  name: "Ansline",
   level: 12,
   xp: 1250,
   xpToNextLevel: 2000,
