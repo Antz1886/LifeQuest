@@ -34,6 +34,7 @@ export function AppSidebar() {
   const { profile, isLoaded } = useUser();
 
   const displayName = isLoaded ? profile.name : (user?.displayName || 'Adventurer');
+  const displayAvatar = isLoaded ? profile.avatarUrl : (user?.photoURL || '');
 
   return (
     <Sidebar>
@@ -88,15 +89,17 @@ export function AppSidebar() {
       </SidebarMenu>
       <SidebarFooter>
         <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Profile" disabled>
+          <Link href="/profile" passHref>
+            <SidebarMenuButton tooltip="Profile" isActive={pathname === '/profile'}>
                 <div className="flex items-center gap-2">
                     <Avatar className="w-7 h-7">
-                        <AvatarImage src={user?.photoURL || ''} alt={displayName}/>
+                        <AvatarImage src={displayAvatar || ''} alt={displayName}/>
                         <AvatarFallback>{displayName.charAt(0) || 'U'}</AvatarFallback>
                     </Avatar>
                     <span className="truncate">{displayName}</span>
                 </div>
             </SidebarMenuButton>
+           </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton tooltip="Settings" disabled>

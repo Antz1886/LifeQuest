@@ -19,6 +19,8 @@ export interface UserProfile {
     meditation: number;
     code: number;
   }
+  title?: string;
+  avatarUrl?: string;
 }
 
 export interface ProjectTask {

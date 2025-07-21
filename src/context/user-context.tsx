@@ -19,6 +19,7 @@ interface UserContextType {
   addProject: (projectData: Omit<Project, 'id' | 'tasks'>) => void;
   toggleProjectTask: (projectId: string, taskId: string) => void;
   addProjectTask: (projectId: string, taskText: string) => void;
+  updateProfileCustomization: (title: string, avatarUrl: string) => void;
   isLoaded: boolean;
 }
 
@@ -41,7 +42,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     try {
       const savedProfile = localStorage.getItem(`userProfile_${userKey}`);
       if (savedProfile) {
-        setProfile(JSON.parse(savedProfile));
+        const parsedProfile = JSON.parse(savedProfile);
+        const displayName = user.displayName || "Adventurer";
+        // Ensure name is updated from Google profile, but keep rest of saved data
+        setProfile({ ...initialProfile, ...parsedProfile, name: displayName });
       } else {
         const displayName = user.displayName || "Adventurer";
         setProfile({ ...initialProfile, name: displayName });
@@ -170,12 +174,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const updateProfileCustomization = (title: string, avatarUrl: string) => {
+    setProfile(prevProfile => ({
+      ...prevProfile,
+      title,
+      avatarUrl,
+    }));
+  };
+
   if (!isLoaded && user) {
     return <div className="flex w-full h-screen items-center justify-center">Loading User Data...</div>;
   }
 
   return (
-    <UserContext.Provider value={{ profile, quests, projects, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask, isLoaded }}>
+    <UserContext.Provider value={{ profile, quests, projects, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask, updateProfileCustomization, isLoaded }}>
       {children}
     </UserContext.Provider>
   );
