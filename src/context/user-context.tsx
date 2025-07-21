@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
@@ -9,6 +10,9 @@ interface UserContextType {
   profile: UserProfile;
   quests: Quest[];
   setQuests: (quests: Quest[]) => void;
+  addQuest: (questData: Omit<Quest, 'id' | 'isCompleted'>) => void;
+  editQuest: (updatedQuest: Quest) => void;
+  deleteQuest: (questId: string) => void;
   completeQuest: (questId: string) => void;
 }
 
@@ -19,6 +23,24 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [quests, setQuests] = useState<Quest[]>(initialQuests);
   const { toast } = useToast();
 
+  const addQuest = (questData: Omit<Quest, 'id' | 'isCompleted'>) => {
+    const newQuest: Quest = {
+      ...questData,
+      id: `q-${Date.now()}-${Math.random()}`,
+      isCompleted: false,
+    };
+    setQuests(prevQuests => [...prevQuests, newQuest]);
+  };
+
+  const editQuest = (updatedQuest: Quest) => {
+    setQuests(prevQuests => prevQuests.map(q => q.id === updatedQuest.id ? updatedQuest : q));
+  };
+  
+  const deleteQuest = (questId: string) => {
+    setQuests(prevQuests => prevQuests.filter(q => q.id !== questId));
+    toast({ title: "Quest Deleted", description: "The quest has been removed from your board."});
+  };
+
   const completeQuest = (questId: string) => {
     const quest = quests.find(q => q.id === questId);
     if (!quest || quest.isCompleted) return;
@@ -27,7 +49,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     const newXp = profile.xp + quest.xp;
     if (newXp >= profile.xpToNextLevel) {
-      // Level up!
       setProfile({
         ...profile,
         level: profile.level + 1,
@@ -49,7 +70,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <UserContext.Provider value={{ profile, quests, setQuests, completeQuest }}>
+    <UserContext.Provider value={{ profile, quests, setQuests, addQuest, editQuest, deleteQuest, completeQuest }}>
       {children}
     </UserContext.Provider>
   );

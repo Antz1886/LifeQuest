@@ -1,0 +1,161 @@
+
+"use client";
+
+import { useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useUser } from '@/context/user-context';
+import { Quest, QuestCategory } from '@/lib/types';
+import { PlusCircle, Edit } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+const questSchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters long."),
+  category: z.enum(["Mind", "Strength", "Code", "Wisdom", "Legacy"]),
+  xp: z.coerce.number().min(10, "XP must be at least 10.").max(200, "XP cannot exceed 200."),
+  time: z.string().min(1, "Time is required."),
+});
+
+type QuestFormData = z.infer<typeof questSchema>;
+
+interface AddEditQuestDialogProps {
+  quest?: Quest;
+  mode: 'add' | 'edit';
+  children: React.ReactNode;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }: AddEditQuestDialogProps) {
+  const { addQuest, editQuest } = useUser();
+  const { toast } = useToast();
+
+  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<QuestFormData>({
+    resolver: zodResolver(questSchema),
+    defaultValues: {
+      title: quest?.title || '',
+      category: quest?.category || 'Mind',
+      xp: quest?.xp || 50,
+      time: quest?.time || '',
+    },
+  });
+
+  useEffect(() => {
+    if (open) {
+      reset(quest ? {
+        title: quest.title,
+        category: quest.category,
+        xp: quest.xp,
+        time: quest.time,
+      } : {
+        title: '',
+        category: 'Mind',
+        xp: 50,
+        time: '',
+      });
+    }
+  }, [open, quest, reset]);
+
+
+  const onSubmit = (data: QuestFormData) => {
+    try {
+        if (mode === 'edit' && quest) {
+            editQuest({ ...quest, ...data });
+            toast({ title: "Quest Updated!", description: "Your quest has been successfully updated." });
+        } else {
+            addQuest(data);
+            toast({ title: "Quest Added!", description: "A new quest has been added to your board." });
+        }
+        onOpenChange(false);
+    } catch (error) {
+         toast({ title: "An error occurred.", description: "Could not save the quest. Please try again.", variant: "destructive" });
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[480px]">
+        <DialogHeader>
+          <DialogTitle className="font-headline text-2xl text-primary flex items-center gap-2">
+            {mode === 'add' ? <PlusCircle /> : <Edit />}
+            {mode === 'add' ? 'Add New Quest' : 'Edit Quest'}
+          </DialogTitle>
+          <DialogDescription>
+            {mode === 'add' ? 'Forge a new task for your journey.' : 'Refine the details of your quest.'}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <div>
+            <Label htmlFor="title">Title</Label>
+            <Input id="title" {...register('title')} />
+            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
+          </div>
+
+          <div>
+            <Label htmlFor="category">Category</Label>
+            <Controller
+              name="category"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <SelectTrigger id="category">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(['Mind', 'Strength', 'Code', 'Wisdom', 'Legacy'] as QuestCategory[]).map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="xp">XP</Label>
+              <Input id="xp" type="number" {...register('xp')} />
+              {errors.xp && <p className="text-red-500 text-sm mt-1">{errors.xp.message}</p>}
+            </div>
+            <div>
+              <Label htmlFor="time">Time</Label>
+              <Input id="time" placeholder="e.g., '10 AM' or '30 min'" {...register('time')} />
+              {errors.time && <p className="text-red-500 text-sm mt-1">{errors.time.message}</p>}
+            </div>
+          </div>
+           <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">Cancel</Button>
+            </DialogClose>
+            <Button type="submit">Save Quest</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
