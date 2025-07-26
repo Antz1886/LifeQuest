@@ -97,22 +97,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       const savedQuests = localStorage.getItem(`userQuests_${userKey}`);
       const savedProjects = localStorage.getItem(`userProjects_${userKey}`);
 
+      const loadedProfile = savedProfile ? JSON.parse(savedProfile) : initialProfile;
       const loadedQuests = savedQuests ? JSON.parse(savedQuests) : initialQuests;
+      const loadedProjects = savedProjects ? JSON.parse(savedProjects) : [];
       
-      if (savedProfile) {
-        const parsedProfile = JSON.parse(savedProfile);
-        const displayName = user.displayName || "Adventurer";
-        setProfile({ ...initialProfile, ...parsedProfile, name: displayName });
-      } else {
-        const displayName = user.displayName || "Adventurer";
-        setProfile({ ...initialProfile, name: displayName });
-      }
-
+      setProfile({
+        ...loadedProfile,
+        name: user.displayName || loadedProfile.name || "Adventurer",
+      });
       setQuests(loadedQuests);
-      setProjects(savedProjects ? JSON.parse(savedProjects) : []);
+      setProjects(loadedProjects);
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
+      // Set to defaults if loading fails
       const displayName = user.displayName || "Adventurer";
       setProfile({ ...initialProfile, name: displayName });
       setQuests(initialQuests);
