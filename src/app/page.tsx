@@ -15,10 +15,10 @@ export default function HomePage() {
       <SidebarProvider>
         <div className="flex min-h-screen">
           <AppSidebar />
-          <SidebarInset className="flex-1">
+          <SidebarInset className="flex-1 pb-16 md:pb-0">
             <header className="flex items-center justify-between p-4 border-b">
                <SidebarTrigger className="md:hidden"/>
-               <h1 className="text-2xl font-headline font-semibold">Daily Mission Dashboard</h1>
+               <h1 className="text-2xl font-headline font-semibold">Dashboard</h1>
             </header>
             <main className="p-4 lg:p-6 space-y-6">
               <UserStats />

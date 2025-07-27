@@ -14,7 +14,7 @@ export default function ZenZonePage() {
       <SidebarProvider>
         <div className="flex min-h-screen">
             <AppSidebar />
-            <SidebarInset className="flex-1">
+            <SidebarInset className="flex-1 pb-16 md:pb-0">
             <header className="flex items-center justify-between p-4 border-b">
                 <SidebarTrigger className="md:hidden"/>
                 <h1 className="text-2xl font-headline font-semibold">Zen Zone</h1>

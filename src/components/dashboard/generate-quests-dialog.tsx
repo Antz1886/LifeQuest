@@ -58,9 +58,9 @@ export function GenerateQuestsDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                    <Wand2 className="w-4 h-4" />
-                    Generate with AI
+                <Button variant="outline" className="w-full md:w-auto">
+                    <Wand2 className="w-4 h-4 md:mr-2" />
+                    <span className="hidden md:inline">Generate with AI</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[480px]">
@@ -83,6 +83,7 @@ export function GenerateQuestsDialog() {
                     <Button
                         onClick={handleGenerate}
                         disabled={isLoading}
+                        className="w-full"
                     >
                         {isLoading ? (
                             <>

@@ -31,7 +31,7 @@ function ProgressLogContent() {
             <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card className="bg-card/50">
-                        <CardHeader className="flex-row items-center gap-4 space-y-0">
+                        <CardHeader className="flex-row items-center gap-4 space-y-0 p-4">
                             <Award className="w-8 h-8 text-accent"/>
                             <div>
                                 <CardTitle className="text-lg font-bold">{profile.level}</CardTitle>
@@ -40,20 +40,20 @@ function ProgressLogContent() {
                         </CardHeader>
                     </Card>
                     <Card className="bg-card/50">
-                            <CardHeader className="flex-row items-center gap-4 space-y-0">
+                            <CardHeader className="flex-row items-center gap-4 space-y-0 p-4">
                             <CheckCircle className="w-8 h-8 text-accent"/>
                             <div>
                                 <CardTitle className="text-lg font-bold">{quests.filter(q=>q.isCompleted).length}</CardTitle>
-                                <CardDescription>Quests Completed</CardDescription>
+                                <CardDescription>Quests Done</CardDescription>
                             </div>
                         </CardHeader>
                     </Card>
                         <Card className="bg-card/50">
-                            <CardHeader className="flex-row items-center gap-4 space-y-0">
+                            <CardHeader className="flex-row items-center gap-4 space-y-0 p-4">
                             <Award className="w-8 h-8 text-accent"/>
                             <div>
                                 <CardTitle className="text-lg font-bold">{profile.xp}</CardTitle>
-                                <CardDescription>Total XP Gained</CardDescription>
+                                <CardDescription>Total XP</CardDescription>
                             </div>
                         </CardHeader>
                     </Card>
@@ -82,7 +82,7 @@ export default function ProgressLogPage() {
      <SidebarProvider>
         <div className="flex min-h-screen">
           <AppSidebar />
-          <SidebarInset className="flex-1">
+          <SidebarInset className="flex-1 pb-16 md:pb-0">
             <header className="flex items-center justify-between p-4 border-b">
                <SidebarTrigger className="md:hidden"/>
                <h1 className="text-2xl font-headline font-semibold">Progress Log</h1>

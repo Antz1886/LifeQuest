@@ -47,7 +47,7 @@ function ProjectVaultContent() {
     return (
         <main className="p-4 lg:p-6 space-y-6">
             <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                     <CardTitle className="font-headline text-2xl flex items-center gap-2">
                         <Archive className="text-primary"/>
@@ -58,7 +58,7 @@ function ProjectVaultContent() {
                     </CardDescription>
                 </div>
                 <AddProjectDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                    <Button onClick={() => setIsAddDialogOpen(true)}>
+                    <Button onClick={() => setIsAddDialogOpen(true)} className="w-full md:w-auto">
                         <PlusCircle className="w-4 h-4 mr-2" />
                         Add New Project
                     </Button>
@@ -120,7 +120,7 @@ export default function ProjectVaultPage() {
         <SidebarProvider>
         <div className="flex min-h-screen">
             <AppSidebar />
-            <SidebarInset className="flex-1">
+            <SidebarInset className="flex-1 pb-16 md:pb-0">
             <header className="flex items-center justify-between p-4 border-b">
                 <SidebarTrigger className="md:hidden"/>
                 <h1 className="text-2xl font-headline font-semibold">Project Vault</h1>

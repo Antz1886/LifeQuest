@@ -35,6 +35,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 const categoryIcons: Record<QuestCategory, React.ReactNode> = {
   Mind: <BrainCircuit className="w-5 h-5" />,
@@ -132,24 +133,37 @@ export function QuestBoard() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center md:justify-between gap-4">
         <CardTitle className="font-headline text-2xl flex items-center gap-2">
           <Swords className="text-primary" />
           Today's Quests
         </CardTitle>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full md:w-auto">
           <GenerateQuestsDialog />
           <AddEditQuestDialog mode="add" open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <Button className="gap-2">
+            <Button className="gap-2 w-full md:w-auto">
               <PlusCircle className="w-4 h-4" />
-              Add Quest
+              <span>Add Quest</span>
             </Button>
           </AddEditQuestDialog>
         </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="All" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6">
+          <div className="md:hidden">
+            <ScrollArea className="w-full whitespace-nowrap rounded-md">
+              <TabsList className="grid w-max grid-cols-6">
+                <TabsTrigger value="All">All</TabsTrigger>
+                {categories.map((cat) => (
+                  <TabsTrigger key={cat} value={cat}>
+                    {cat}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </div>
+          <TabsList className="hidden md:grid w-full grid-cols-6">
             <TabsTrigger value="All">All</TabsTrigger>
             {categories.map((cat) => (
               <TabsTrigger key={cat} value={cat}>
@@ -161,7 +175,10 @@ export function QuestBoard() {
             {quests.length > 0 ? (
                 quests.map((quest) => <QuestItem key={quest.id} quest={quest} />)
             ) : (
-                <p className="text-center text-muted-foreground py-8">No quests yet. Add one or generate with AI!</p>
+                <div className="text-center text-muted-foreground py-8">
+                  <p className="mb-2">Your quest board is clear!</p>
+                  <p className="text-sm">Add a new quest or generate one with AI to start your journey.</p>
+                </div>
             )}
           </TabsContent>
           {categories.map((cat) => (
@@ -170,7 +187,9 @@ export function QuestBoard() {
                     <QuestItem key={quest.id} quest={quest} />
                 ))}
                 {quests.filter((q) => q.category === cat).length === 0 && (
-                    <p className="text-center text-muted-foreground py-8">No quests in this category.</p>
+                     <div className="text-center text-muted-foreground py-8">
+                        <p className="text-sm">No quests in this category.</p>
+                     </div>
                 )}
             </TabsContent>
           ))}
