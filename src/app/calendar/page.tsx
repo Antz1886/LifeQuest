@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState }d from "react";
+import { useState } from "react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import {
   SidebarProvider,
