@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "@/context/auth-context";
+import { UserProvider } from "@/context/user-context";
 
 export const metadata: Metadata = {
   title: "LifeQuest",
@@ -29,10 +29,10 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <AuthProvider>
+        <UserProvider>
             {children}
             <Toaster />
-        </AuthProvider>
+        </UserProvider>
       </body>
     </html>
   );

@@ -1,7 +1,6 @@
 
 "use client";
 
-import { UserProvider } from "@/context/user-context";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import {
   SidebarProvider,
@@ -11,27 +10,10 @@ import {
 import { WeeklyChart } from "@/components/dashboard/weekly-chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Map } from "lucide-react";
-import { useAuth } from "@/context/auth-context";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 export default function WeeklyMapPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user) {
-    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
-  }
-
   return (
-    <UserProvider>
-        <SidebarProvider>
+      <SidebarProvider>
         <div className="flex min-h-screen">
             <AppSidebar />
             <SidebarInset className="flex-1">
@@ -57,7 +39,6 @@ export default function WeeklyMapPage() {
             </main>
             </SidebarInset>
         </div>
-        </SidebarProvider>
-    </UserProvider>
+      </SidebarProvider>
   );
 }

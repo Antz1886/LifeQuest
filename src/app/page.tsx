@@ -1,8 +1,6 @@
 
 "use client";
 
-import { UserProvider } from "@/context/user-context";
-import { useAuth } from "@/context/auth-context";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import {
   SidebarProvider,
@@ -11,25 +9,9 @@ import {
 } from "@/components/ui/sidebar";
 import { UserStats } from "@/components/dashboard/user-stats";
 import { QuestBoard } from "@/components/dashboard/quest-board";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
-export default function ProtectedHome() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user) {
-    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
-  }
-
+export default function HomePage() {
   return (
-    <UserProvider>
       <SidebarProvider>
         <div className="flex min-h-screen">
           <AppSidebar />
@@ -45,6 +27,5 @@ export default function ProtectedHome() {
           </SidebarInset>
         </div>
       </SidebarProvider>
-    </UserProvider>
   )
 }

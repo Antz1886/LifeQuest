@@ -1,7 +1,6 @@
 
 "use client";
 
-import { UserProvider } from "@/context/user-context";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import {
   SidebarProvider,
@@ -10,26 +9,9 @@ import {
 } from "@/components/ui/sidebar";
 import { UserProfileCard } from "@/components/profile/user-profile-card";
 import { ProfileCustomizer } from "@/components/profile/profile-customizer";
-import { useAuth } from "@/context/auth-context";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user) {
-    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
-  }
-
   return (
-    <UserProvider>
       <SidebarProvider>
           <div className="flex min-h-screen">
           <AppSidebar />
@@ -49,6 +31,5 @@ export default function ProfilePage() {
           </SidebarInset>
           </div>
       </SidebarProvider>
-    </UserProvider>
   )
 }

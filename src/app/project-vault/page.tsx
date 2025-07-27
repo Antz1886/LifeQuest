@@ -1,8 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { UserProvider } from "@/context/user-context";
+import { useState } from "react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import {
   SidebarProvider,
@@ -16,9 +15,6 @@ import { Archive, PlusCircle, Check, Circle } from "lucide-react";
 import { AddProjectDialog } from "@/components/project-vault/add-project-dialog";
 import { useUser } from "@/context/user-context";
 import { Progress } from "@/components/ui/progress";
-import { useAuth } from "@/context/auth-context";
-import { useRouter } from "next/navigation";
-
 
 function AddTaskForm({ projectId }: { projectId: string }) {
     const [taskText, setTaskText] = useState("");
@@ -120,21 +116,7 @@ function ProjectVaultContent() {
 }
 
 export default function ProjectVaultPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user) {
-    return <div className="flex justify-center items-center h-screen bg-background">Loading...</div>;
-  }
-
   return (
-    <UserProvider>
         <SidebarProvider>
         <div className="flex min-h-screen">
             <AppSidebar />
@@ -147,6 +129,5 @@ export default function ProjectVaultPage() {
             </SidebarInset>
         </div>
         </SidebarProvider>
-    </UserProvider>
   )
 }

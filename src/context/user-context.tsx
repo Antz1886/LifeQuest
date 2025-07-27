@@ -5,7 +5,6 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useCa
 import { userProfile as initialProfile, quests as initialQuests } from '@/lib/mock-data';
 import type { UserProfile, Quest, Project, ProjectTask, QuestCategory } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from './auth-context';
 import { isSameDay, subDays, startOfDay } from 'date-fns';
 
 
@@ -76,22 +75,16 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile>(initialProfile);
   const [quests, setQuests] = useState<Quest[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const userKey = user ? user.uid : 'guest';
+  const userKey = 'guest';
 
   // Load data from localStorage
   useEffect(() => {
-    if (!user) {
-        setIsLoaded(false);
-        return;
-    };
-
     try {
       const savedProfile = localStorage.getItem(`userProfile_${userKey}`);
       const savedQuests = localStorage.getItem(`userQuests_${userKey}`);
@@ -101,35 +94,31 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       const loadedQuests = savedQuests ? JSON.parse(savedQuests) : initialQuests;
       const loadedProjects = savedProjects ? JSON.parse(savedProjects) : [];
       
-      setProfile({
-        ...loadedProfile,
-        name: user.displayName || loadedProfile.name || "Adventurer",
-      });
+      setProfile(loadedProfile);
       setQuests(loadedQuests);
       setProjects(loadedProjects);
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       // Set to defaults if loading fails
-      const displayName = user.displayName || "Adventurer";
-      setProfile({ ...initialProfile, name: displayName });
+      setProfile(initialProfile);
       setQuests(initialQuests);
       setProjects([]);
     } finally {
       setIsLoaded(true);
     }
-  }, [user, userKey]);
+  }, []);
 
   // Save data to localStorage
   const saveData = useCallback((key: string, data: any) => {
-      if (isLoaded && user) {
+      if (isLoaded) {
           try {
               localStorage.setItem(`${key}_${userKey}`, JSON.stringify(data));
           } catch (error) {
               console.error("Failed to save data to localStorage", error);
           }
       }
-  }, [isLoaded, user, userKey]);
+  }, [isLoaded]);
 
   useEffect(() => {
     saveData('userProfile', profile);
@@ -272,7 +261,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
-  if (!isLoaded && user) {
+  if (!isLoaded) {
     return <div className="flex w-full h-screen items-center justify-center bg-background">Loading User Data...</div>;
   }
 

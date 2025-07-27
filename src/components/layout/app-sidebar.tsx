@@ -21,20 +21,17 @@ import {
   BrainCircuit,
   Settings,
   User,
-  LogOut,
 } from "lucide-react";
-import { useAuth } from '@/context/auth-context';
 import { useUser } from '@/context/user-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
   const { profile, isLoaded } = useUser();
 
-  const displayName = isLoaded ? profile.name : (user?.displayName || 'Adventurer');
-  const displayAvatar = isLoaded ? profile.avatarUrl : (user?.photoURL || '');
+  const displayName = isLoaded ? profile.name : 'Adventurer';
+  const displayAvatar = isLoaded ? profile.avatarUrl : '';
 
   return (
     <Sidebar>
@@ -94,7 +91,7 @@ export function AppSidebar() {
                 <div className="flex items-center gap-2">
                     <Avatar className="w-7 h-7">
                         <AvatarImage src={displayAvatar || ''} alt={displayName}/>
-                        <AvatarFallback>{displayName.charAt(0) || 'U'}</AvatarFallback>
+                        <AvatarFallback>{displayName.charAt(0) || 'A'}</AvatarFallback>
                     </Avatar>
                     <span className="truncate">{displayName}</span>
                 </div>
@@ -105,12 +102,6 @@ export function AppSidebar() {
           <SidebarMenuButton tooltip="Settings" disabled>
             <Settings />
             <span>Settings</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton tooltip="Logout" onClick={logout}>
-            <LogOut />
-            <span>Logout</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarFooter>
