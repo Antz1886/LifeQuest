@@ -107,7 +107,10 @@ The style should be modern, vibrant, and inspiring, with a dark, fantasy, epic t
     
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: imageGenerationPrompt,
+      prompt: [
+        {text: imageGenerationPrompt},
+        {data: input},
+      ],
       config: {
         responseModalities: ['IMAGE', 'TEXT'],
       },
@@ -124,4 +127,3 @@ The style should be modern, vibrant, and inspiring, with a dark, fantasy, epic t
     };
   }
 );
-
