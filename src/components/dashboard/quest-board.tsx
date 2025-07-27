@@ -167,7 +167,7 @@ export function QuestBoard() {
           <Swords className="text-primary" />
           Today's Quests
         </CardTitle>
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
           <GenerateQuestsDialog />
           <AddEditQuestDialog mode="add" open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <Button className="gap-2 w-full md:w-auto">

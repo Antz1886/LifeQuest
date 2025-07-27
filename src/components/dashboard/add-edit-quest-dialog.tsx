@@ -30,7 +30,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { useUser } from '@/context/user-context';
 import { Quest, QuestCategory } from '@/lib/types';
 import { PlusCircle, Edit, CalendarIcon } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { format, formatISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -54,7 +53,6 @@ interface AddEditQuestDialogProps {
 
 export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }: AddEditQuestDialogProps) {
   const { addQuest, editQuest } = useUser();
-  const { toast } = useToast();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<QuestFormData>({
@@ -93,18 +91,12 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
         date: formatISO(data.date, { representation: 'date' }),
     };
 
-    try {
-        if (mode === 'edit' && quest) {
-            editQuest({ ...quest, ...questData });
-            toast({ title: "Quest Updated!", description: "Your quest has been successfully updated." });
-        } else {
-            addQuest(questData);
-            toast({ title: "Quest Added!", description: "A new quest has been added to your board." });
-        }
-        onOpenChange(false);
-    } catch (error) {
-         toast({ title: "An error occurred.", description: "Could not save the quest. Please try again.", variant: "destructive" });
+    if (mode === 'edit' && quest) {
+        editQuest({ ...quest, ...questData });
+    } else {
+        addQuest(questData);
     }
+    onOpenChange(false);
   };
 
   return (
@@ -174,7 +166,7 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
                                 mode="single"
                                 selected={field.value}
                                 onSelect={(date) => {
-                                    field.onChange(date)
+                                    if(date) field.onChange(date)
                                     setIsCalendarOpen(false);
                                 }}
                                 initialFocus

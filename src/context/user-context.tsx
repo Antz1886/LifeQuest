@@ -155,10 +155,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       isCompleted: false,
     };
     setQuests(prevQuests => [...prevQuests, newQuest]);
+    toast({ title: "Quest Added!", description: "A new quest has been added to your board." });
   };
 
   const editQuest = (updatedQuest: Quest) => {
     setQuests(prevQuests => prevQuests.map(q => q.id === updatedQuest.id ? updatedQuest : q));
+    toast({ title: "Quest Updated!", description: "Your quest has been successfully updated." });
   };
   
   const deleteQuest = (questId: string) => {
@@ -180,12 +182,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const xpChange = isNowCompleted ? quest.xp : -quest.xp;
     
     setProfile(p => {
-        const newXp = p.xp + xpChange;
+        let newXp = p.xp + xpChange;
+        
+        if (newXp < 0) newXp = 0;
+
         if (isNowCompleted) {
             if (newXp >= p.xpToNextLevel) {
               const newLevel = p.level + 1;
               toast({
-                title: "Level Up!",
+                title: `Level Up!`,
                 description: `Congratulations! You've reached Level ${newLevel}.`,
               });
               return {
