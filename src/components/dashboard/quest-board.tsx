@@ -36,6 +36,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { isToday } from "date-fns";
+import { AnimatePresence, motion } from "framer-motion";
 
 const categoryIcons: Record<QuestCategory, React.ReactNode> = {
   Mind: <BrainCircuit className="w-5 h-5" />,
@@ -58,7 +60,13 @@ function QuestItem({ quest }: { quest: Quest }) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const id = `quest-${quest.id}`;
   return (
-    <div className="flex items-center space-x-4 p-4 bg-card hover:bg-muted/50 rounded-lg transition-colors duration-200 group">
+    <motion.div
+        layout
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, x: -100, transition: { duration: 0.3 } }}
+        className="flex items-center space-x-4 p-4 bg-card hover:bg-muted/50 rounded-lg transition-colors duration-200 group"
+    >
       <Checkbox
         id={id}
         checked={quest.isCompleted}
@@ -122,14 +130,35 @@ function QuestItem({ quest }: { quest: Quest }) {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </div>
+    </motion.div>
   );
+}
+
+function QuestList({ quests }: { quests: Quest[] }) {
+    return (
+        <AnimatePresence>
+            {quests.length > 0 ? (
+                quests.map((quest) => <QuestItem key={quest.id} quest={quest} />)
+            ) : (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center text-muted-foreground py-8"
+                >
+                    <p className="mb-2">Your quest board is clear!</p>
+                    <p className="text-sm">Add a new quest or generate one with AI to start your journey.</p>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    )
 }
 
 export function QuestBoard() {
   const { quests } = useUser();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const categories: QuestCategory[] = ["Mind", "Strength", "Code", "Wisdom", "Legacy"];
+
+  const todaysQuests = quests.filter(q => isToday(new Date(q.date)) && !q.isCompleted);
 
   return (
     <Card>
@@ -172,21 +201,12 @@ export function QuestBoard() {
             ))}
           </TabsList>
           <TabsContent value="All" className="mt-4 space-y-3">
-            {quests.length > 0 ? (
-                quests.map((quest) => <QuestItem key={quest.id} quest={quest} />)
-            ) : (
-                <div className="text-center text-muted-foreground py-8">
-                  <p className="mb-2">Your quest board is clear!</p>
-                  <p className="text-sm">Add a new quest or generate one with AI to start your journey.</p>
-                </div>
-            )}
+              <QuestList quests={todaysQuests} />
           </TabsContent>
           {categories.map((cat) => (
             <TabsContent key={cat} value={cat} className="mt-4 space-y-3">
-                {quests.filter((q) => q.category === cat).map((quest) => (
-                    <QuestItem key={quest.id} quest={quest} />
-                ))}
-                {quests.filter((q) => q.category === cat).length === 0 && (
+                <QuestList quests={todaysQuests.filter((q) => q.category === cat)} />
+                {todaysQuests.filter((q) => q.category === cat).length === 0 && (
                      <div className="text-center text-muted-foreground py-8">
                         <p className="text-sm">No quests in this category.</p>
                      </div>

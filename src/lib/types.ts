@@ -7,7 +7,8 @@ export interface Quest {
   xp: number;
   isCompleted: boolean;
   time: string;
-  completedAt?: number; // Added to track completion date
+  completedAt?: number;
+  date: string; // ISO date string
 }
 
 export interface UserProfile {

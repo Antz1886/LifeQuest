@@ -21,6 +21,7 @@ import {
   BrainCircuit,
   Settings,
   User,
+  Calendar,
 } from "lucide-react";
 import { useUser } from '@/context/user-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -48,6 +49,14 @@ function AppSidebarContent() {
                     <SidebarMenuButton tooltip="Dashboard" isActive={pathname === '/'}>
                     <LayoutGrid />
                     <span>Dashboard</span>
+                    </SidebarMenuButton>
+                </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                <Link href="/calendar" passHref>
+                    <SidebarMenuButton tooltip="Calendar" isActive={pathname === '/calendar'}>
+                    <Calendar />
+                    <span>Calendar</span>
                     </SidebarMenuButton>
                 </Link>
                 </SidebarMenuItem>
@@ -113,7 +122,7 @@ function BottomNavBar() {
     const pathname = usePathname();
     const navItems = [
         { href: "/", label: "Dashboard", icon: LayoutGrid },
-        { href: "/weekly-map", label: "Map", icon: Map },
+        { href: "/calendar", label: "Calendar", icon: Calendar },
         { href: "/project-vault", label: "Projects", icon: Archive },
         { href: "/profile", label: "Profile", icon: User },
     ];

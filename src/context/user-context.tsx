@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useCa
 import { userProfile as initialProfile, quests as initialQuests } from '@/lib/mock-data';
 import type { UserProfile, Quest, Project, ProjectTask, QuestCategory } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { isSameDay, subDays, startOfDay } from 'date-fns';
+import { isSameDay, subDays, startOfDay, formatISO } from 'date-fns';
 
 
 // Helper function to calculate streaks
@@ -19,14 +19,14 @@ const calculateStreaks = (completedQuests: Quest[]) => {
 
     const sortedQuests = completedQuests
         .filter(q => q.completedAt && q.category in categoryMap)
-        .sort((a, b) => b.completedAt! - a.completedAt!);
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     const calculateStreakForCategory = (cat: keyof typeof streaks) => {
         let streak = 0;
         let currentDate = startOfDay(new Date());
         
         const categoryQuests = sortedQuests.filter(q => categoryMap[q.category] === cat);
-        const uniqueDays = Array.from(new Set(categoryQuests.map(q => startOfDay(new Date(q.completedAt!)).getTime()))).sort((a,b) => b-a);
+        const uniqueDays = Array.from(new Set(categoryQuests.map(q => startOfDay(new Date(q.date)).getTime()))).sort((a,b) => b-a);
         
         if (uniqueDays.length === 0) return 0;
         
@@ -95,7 +95,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       const loadedProjects = savedProjects ? JSON.parse(savedProjects) : [];
       
       setProfile(loadedProfile);
-      setQuests(loadedQuests);
+      setQuests(loadedQuests.map((q: Quest) => ({...q, date: q.date || formatISO(new Date(), { representation: 'date' })})));
       setProjects(loadedProjects);
 
     } catch (error) {
@@ -195,6 +195,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
                 xpToNextLevel: Math.floor(p.xpToNextLevel * 1.5),
               };
             } else {
+              toast({
+                  title: "Quest Complete!",
+                  description: `You earned ${quest.xp} XP!`,
+              })
               return { ...p, xp: newXp };
             }
         } else {

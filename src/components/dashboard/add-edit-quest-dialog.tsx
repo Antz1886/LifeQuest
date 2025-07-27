@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,16 +25,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { useUser } from '@/context/user-context';
 import { Quest, QuestCategory } from '@/lib/types';
-import { PlusCircle, Edit } from 'lucide-react';
+import { PlusCircle, Edit, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { format, formatISO } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const questSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long."),
   category: z.enum(["Mind", "Strength", "Code", "Wisdom", "Legacy"]),
   xp: z.coerce.number().min(10, "XP must be at least 10.").max(200, "XP cannot exceed 200."),
   time: z.string().min(1, "Time is required."),
+  date: z.date({ required_error: "A date is required." }),
 });
 
 type QuestFormData = z.infer<typeof questSchema>;
@@ -50,6 +55,7 @@ interface AddEditQuestDialogProps {
 export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }: AddEditQuestDialogProps) {
   const { addQuest, editQuest } = useUser();
   const { toast } = useToast();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<QuestFormData>({
     resolver: zodResolver(questSchema),
@@ -58,6 +64,7 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
       category: quest?.category || 'Mind',
       xp: quest?.xp || 50,
       time: quest?.time || '',
+      date: quest ? new Date(quest.date) : new Date(),
     },
   });
 
@@ -68,23 +75,30 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
         category: quest.category,
         xp: quest.xp,
         time: quest.time,
+        date: new Date(quest.date),
       } : {
         title: '',
         category: 'Mind',
         xp: 50,
         time: '',
+        date: new Date(),
       });
     }
   }, [open, quest, reset]);
 
 
   const onSubmit = (data: QuestFormData) => {
+    const questData = {
+        ...data,
+        date: formatISO(data.date, { representation: 'date' }),
+    };
+
     try {
         if (mode === 'edit' && quest) {
-            editQuest({ ...quest, ...data });
+            editQuest({ ...quest, ...questData });
             toast({ title: "Quest Updated!", description: "Your quest has been successfully updated." });
         } else {
-            addQuest(data);
+            addQuest(questData);
             toast({ title: "Quest Added!", description: "A new quest has been added to your board." });
         }
         onOpenChange(false);
@@ -135,6 +149,43 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
             />
             {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>}
           </div>
+            
+          <div>
+            <Label>Date</Label>
+            <Controller
+                name="date"
+                control={control}
+                render={({ field }) => (
+                     <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant={"outline"}
+                                className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={(date) => {
+                                    field.onChange(date)
+                                    setIsCalendarOpen(false);
+                                }}
+                                initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
+                )}
+            />
+             {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>}
+          </div>
+
 
           <div className="grid grid-cols-2 gap-4">
             <div>
