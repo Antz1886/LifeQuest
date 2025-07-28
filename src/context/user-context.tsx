@@ -68,6 +68,7 @@ interface UserContextType {
   addProject: (projectData: Omit<Project, 'id' | 'tasks'>) => void;
   toggleProjectTask: (projectId: string, taskId: string) => void;
   addProjectTask: (projectId: string, taskText: string) => void;
+  deleteProjectTask: (projectId: string, taskId: string) => void;
   updateProfileCustomization: (title: string, avatarUrl: string) => void;
   isLoaded: boolean;
 }
@@ -262,6 +263,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const deleteProjectTask = (projectId: string, taskId: string) => {
+      setProjects(prevProjects =>
+        prevProjects.map(p =>
+            p.id === projectId
+            ? {
+                ...p,
+                tasks: p.tasks.filter(t => t.id !== taskId),
+                }
+            : p
+        )
+    );
+    toast({ title: "Task Deleted", description: "The task has been removed from the project." });
+  }
+
   const updateProfileCustomization = (title: string, avatarUrl: string) => {
     setProfile(prevProfile => ({
       ...prevProfile,
@@ -275,7 +290,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <UserContext.Provider value={{ profile, quests, projects, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask, updateProfileCustomization, isLoaded }}>
+    <UserContext.Provider value={{ profile, quests, projects, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask, deleteProjectTask, updateProfileCustomization, isLoaded }}>
       {children}
     </UserContext.Provider>
   );

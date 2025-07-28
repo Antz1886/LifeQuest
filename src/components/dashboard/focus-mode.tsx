@@ -12,8 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, RotateCcw } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Play, Pause, RotateCcw, Coffee, BrainCircuit } from 'lucide-react';
 import type { Quest } from '@/lib/types';
 
 const FOCUS_TIME = 25 * 60; // 25 minutes
@@ -23,7 +22,8 @@ export function FocusMode({ children, quest }: { children: ReactNode, quest: Que
     const [mode, setMode] = useState<'focus' | 'break'>('focus');
     const [timeLeft, setTimeLeft] = useState(FOCUS_TIME);
     const [isActive, setIsActive] = useState(false);
-    const { toast } = useToast();
+    const [showBreakMessage, setShowBreakMessage] = useState(false);
+    const [showFocusMessage, setShowFocusMessage] = useState(false);
 
     useEffect(() => {
         let interval: NodeJS.Timeout | null = null;
@@ -37,25 +37,39 @@ export function FocusMode({ children, quest }: { children: ReactNode, quest: Que
             if (mode === 'focus') {
                 setMode('break');
                 setTimeLeft(BREAK_TIME);
-                toast({ title: "Focus session over!", description: "Time for a short break. You've earned it!", variant: "default" });
+                setShowBreakMessage(true);
             } else {
                 setMode('focus');
                 setTimeLeft(FOCUS_TIME);
-                 toast({ title: "Break's over!", description: "Time to get back to it!", variant: "default" });
+                setShowFocusMessage(true);
             }
         }
 
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [isActive, timeLeft, mode, toast]);
+    }, [isActive, timeLeft, mode]);
+    
+    const handleOpenChange = (open: boolean) => {
+        if (!open) {
+            setIsActive(false);
+        } else {
+            resetTimer();
+        }
+    };
 
-    const toggleTimer = () => setIsActive(!isActive);
+    const toggleTimer = () => {
+        setIsActive(!isActive)
+        setShowBreakMessage(false);
+        setShowFocusMessage(false);
+    };
 
     const resetTimer = () => {
         setIsActive(false);
         setMode('focus');
         setTimeLeft(FOCUS_TIME);
+        setShowBreakMessage(false);
+        setShowFocusMessage(false);
     };
 
     const minutes = Math.floor(timeLeft / 60);
@@ -64,7 +78,7 @@ export function FocusMode({ children, quest }: { children: ReactNode, quest: Que
     const progress = ((totalTime - timeLeft) / totalTime) * 100;
 
     return (
-        <Dialog onOpenChange={(open) => !open && setIsActive(false)}>
+        <Dialog onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
@@ -75,12 +89,12 @@ export function FocusMode({ children, quest }: { children: ReactNode, quest: Que
                         Focusing on: <span className="font-semibold text-accent">{quest.title}</span>
                     </DialogDescription>
                 </DialogHeader>
-                <div className="flex flex-col items-center justify-center space-y-6 py-8">
-                    <div className="relative w-48 h-48">
+                <div className="flex flex-col items-center justify-center space-y-4 py-6">
+                     <div className="relative w-48 h-48 mb-4">
                         <svg className="w-full h-full" viewBox="0 0 100 100">
                            <circle className="text-muted-foreground/20" strokeWidth="7" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
                            <circle
-                            className="text-accent"
+                            className={mode === 'focus' ? "text-accent" : "text-green-500"}
                             strokeWidth="7"
                             strokeDasharray={2 * Math.PI * 45}
                             strokeDashoffset={(2 * Math.PI * 45) - (progress / 100) * (2 * Math.PI * 45)}
@@ -100,6 +114,19 @@ export function FocusMode({ children, quest }: { children: ReactNode, quest: Que
                             </span>
                         </div>
                     </div>
+
+                    {showBreakMessage && (
+                        <div className="text-center p-3 rounded-lg bg-muted border border-green-500/50">
+                            <p className="font-semibold flex items-center gap-2"><Coffee className="text-green-500"/> Break time!</p>
+                            <p className="text-sm text-muted-foreground">Time for a short break. You've earned it!</p>
+                        </div>
+                    )}
+                    {showFocusMessage && (
+                        <div className="text-center p-3 rounded-lg bg-muted border border-accent/50">
+                             <p className="font-semibold flex items-center gap-2"><BrainCircuit className="text-accent"/> Focus time!</p>
+                             <p className="text-sm text-muted-foreground">Break's over. Let's get back to it!</p>
+                        </div>
+                    )}
                 </div>
                 <DialogFooter className="flex-row justify-center items-center gap-4">
                      <Button onClick={resetTimer} variant="ghost" size="icon" className="w-12 h-12">
