@@ -13,7 +13,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu"
-import { MoreVertical, LayoutGrid, Map, BarChart3, BrainCircuit, Settings, LogOut } from 'lucide-react';
+import { MoreVertical, LayoutGrid, Map, BarChart3, BrainCircuit, Settings, LogOut, Flame } from 'lucide-react';
 
 export function AppHeader({ title }: { title: string }) {
     const { profile, isLoaded } = useUser();
@@ -24,40 +24,42 @@ export function AppHeader({ title }: { title: string }) {
 
     return (
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+                 <Link href="/" className="flex items-center gap-2">
+                    <Flame className="w-7 h-7 text-primary" />
+                </Link>
                  <h1 className="text-xl font-headline font-semibold">{title}</h1>
             </div>
            
             <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
-                 <div className="ml-auto flex-1 sm:flex-initial">
-                    <div className="w-full max-w-[200px] ml-auto">
+                 <div className="ml-auto flex items-center gap-4">
+                    <div className="hidden sm:block w-full max-w-[200px]">
                         <div className="flex justify-between items-center mb-1">
                             <span className="text-sm font-bold text-primary">Lvl {profile.level}</span>
                             <span className="text-xs text-muted-foreground">{profile.xp} / {profile.xpToNextLevel} XP</span>
                         </div>
                         <Progress value={xpPercentage} className="h-2 [&>div]:bg-primary" />
                     </div>
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="relative w-9 h-9 rounded-full">
+                               <Avatar className="w-9 h-9">
+                                    <AvatarImage src={displayAvatar || ''} alt={displayName}/>
+                                    <AvatarFallback>{displayName.charAt(0) || 'A'}</AvatarFallback>
+                                </Avatar>
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel>{profile.name}</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <Link href="/profile" passHref><DropdownMenuItem>Profile</DropdownMenuItem></Link>
+                             <DropdownMenuSeparator />
+                             <Link href="/weekly-map" passHref><DropdownMenuItem><Map className="mr-2 h-4 w-4"/>Weekly Map</DropdownMenuItem></Link>
+                             <Link href="/progress-log" passHref><DropdownMenuItem><BarChart3 className="mr-2 h-4 w-4"/>Progress Log</DropdownMenuItem></Link>
+                             <Link href="/zen-zone" passHref><DropdownMenuItem><BrainCircuit className="mr-2 h-4 w-4"/>Zen Zone</DropdownMenuItem></Link>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <button className="relative w-8 h-8 rounded-full">
-                           <Avatar>
-                                <AvatarImage src={displayAvatar || ''} alt={displayName}/>
-                                <AvatarFallback>{displayName.charAt(0) || 'A'}</AvatarFallback>
-                            </Avatar>
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <Link href="/profile" passHref><DropdownMenuItem>Profile</DropdownMenuItem></Link>
-                        <DropdownMenuItem disabled>Settings</DropdownMenuItem>
-                         <DropdownMenuSeparator />
-                         <Link href="/weekly-map" passHref><DropdownMenuItem>Weekly Map</DropdownMenuItem></Link>
-                         <Link href="/progress-log" passHref><DropdownMenuItem>Progress Log</DropdownMenuItem></Link>
-                         <Link href="/zen-zone" passHref><DropdownMenuItem>Zen Zone</DropdownMenuItem></Link>
-                    </DropdownMenuContent>
-                </DropdownMenu>
             </div>
         </header>
     );
