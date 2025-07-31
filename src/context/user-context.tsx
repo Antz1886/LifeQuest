@@ -176,46 +176,54 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     // Toggle completion status
     const isNowCompleted = !quest.isCompleted;
 
-    setQuests(prevQuests => prevQuests.map(q => 
-        q.id === questId ? { ...q, isCompleted: isNowCompleted, completedAt: isNowCompleted ? Date.now() : undefined } : q
-    ));
+    setQuests(prevQuests => 
+        prevQuests.map(q => 
+            q.id === questId ? { ...q, isCompleted: isNowCompleted, completedAt: isNowCompleted ? Date.now() : undefined } : q
+        )
+    );
 
     const xpChange = isNowCompleted ? quest.xp : -quest.xp;
     
+    let leveledUp = false;
+    let newLevelCache = profile.level;
+
     setProfile(p => {
         let newXp = p.xp + xpChange;
-        
         if (newXp < 0) newXp = 0;
 
-        if (isNowCompleted) {
-            if (newXp >= p.xpToNextLevel) {
-              const newLevel = p.level + 1;
-              toast({
-                title: `Level Up!`,
-                description: `Congratulations! You've reached Level ${newLevel}.`,
-              });
-              return {
+        if (isNowCompleted && newXp >= p.xpToNextLevel) {
+            newLevelCache = p.level + 1;
+            leveledUp = true;
+            return {
                 ...p,
-                level: newLevel,
+                level: newLevelCache,
                 xp: newXp - p.xpToNextLevel,
                 xpToNextLevel: Math.floor(p.xpToNextLevel * 1.5),
-              };
-            } else {
-              toast({
-                  title: "Quest Complete!",
-                  description: `You earned ${quest.xp} XP!`,
-              })
-              return { ...p, xp: newXp };
-            }
-        } else {
-             toast({
-                title: "Quest Undone",
-                description: `Re-added "${quest.title}" to your board.`,
-                variant: "default"
-            });
-            return { ...p, xp: newXp };
+            };
         }
+        return { ...p, xp: newXp };
     });
+    
+    // Call toasts after state updates
+    if (isNowCompleted) {
+        if (leveledUp) {
+            toast({
+                title: `Level Up!`,
+                description: `Congratulations! You've reached Level ${newLevelCache}.`,
+            });
+        } else {
+            toast({
+                title: "Quest Complete!",
+                description: `You earned ${quest.xp} XP!`,
+            });
+        }
+    } else {
+        toast({
+            title: "Quest Undone",
+            description: `Re-added "${quest.title}" to your board.`,
+            variant: "default"
+        });
+    }
   };
 
   const addProject = (projectData: Omit<Project, 'id' | 'tasks'>) => {
