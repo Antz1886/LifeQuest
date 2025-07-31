@@ -124,14 +124,13 @@ function BottomNavBar() {
         { href: "/", label: "Dashboard", icon: LayoutGrid },
         { href: "/calendar", label: "Calendar", icon: Calendar },
         { href: "/project-vault", label: "Projects", icon: Archive },
-        { href: "/profile", label: "Profile", icon: User },
     ];
     return (
         <div className="md:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-card border-t border-border">
-            <div className="grid h-full max-w-lg grid-cols-4 mx-auto font-medium">
+            <div className="grid h-full max-w-lg grid-cols-3 mx-auto font-medium">
                 {navItems.map(({href, label, icon: Icon}) => (
                     <Link href={href} key={label} passHref>
-                        <button type="button" className={`inline-flex flex-col items-center justify-center px-5 h-full ${pathname === href ? 'text-primary' : 'text-muted-foreground'} hover:bg-muted`}>
+                        <button type="button" className={`inline-flex flex-col items-center justify-center px-5 h-full w-full ${pathname === href ? 'text-primary' : 'text-muted-foreground'} hover:bg-muted`}>
                             <Icon className="w-6 h-6 mb-1"/>
                             <span className="text-xs">{label}</span>
                         </button>
@@ -148,9 +147,11 @@ export function AppSidebar() {
   return (
     <>
        <div className="hidden md:block">
-            <Sidebar>
-                <AppSidebarContent />
-            </Sidebar>
+            <SidebarProvider>
+                <Sidebar>
+                    <AppSidebarContent />
+                </Sidebar>
+            </SidebarProvider>
        </div>
        {isMobile && <BottomNavBar/>}
     </>

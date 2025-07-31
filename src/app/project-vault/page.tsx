@@ -2,12 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import { AppSidebar } from "@/components/layout/app-sidebar";
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { AppHeader } from "@/components/layout/app-header";
+import { AppShell } from "@/components/layout/app-shell";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,17 +153,9 @@ function ProjectVaultContent() {
 
 export default function ProjectVaultPage() {
   return (
-        <SidebarProvider>
-        <div className="flex min-h-screen">
-            <AppSidebar />
-            <SidebarInset className="flex-1 pb-16 md:pb-0">
-            <header className="flex items-center justify-between p-4 border-b">
-                <SidebarTrigger className="md:hidden"/>
-                <h1 className="text-2xl font-headline font-semibold">Project Vault</h1>
-            </header>
+        <AppShell>
+            <AppHeader title="Project Vault" />
             <ProjectVaultContent />
-            </SidebarInset>
-        </div>
-        </SidebarProvider>
+        </AppShell>
   )
 }

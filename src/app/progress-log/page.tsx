@@ -1,12 +1,8 @@
 
 "use client";
 
-import { AppSidebar } from "@/components/layout/app-sidebar";
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { AppShell } from "@/components/layout/app-shell";
+import { AppHeader } from "@/components/layout/app-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, CheckCircle, Award } from "lucide-react";
 import { useUser } from "@/context/user-context";
@@ -79,17 +75,9 @@ function ProgressLogContent() {
 
 export default function ProgressLogPage() {
   return (
-     <SidebarProvider>
-        <div className="flex min-h-screen">
-          <AppSidebar />
-          <SidebarInset className="flex-1 pb-16 md:pb-0">
-            <header className="flex items-center justify-between p-4 border-b">
-               <SidebarTrigger className="md:hidden"/>
-               <h1 className="text-2xl font-headline font-semibold">Progress Log</h1>
-            </header>
-            <ProgressLogContent />
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+     <AppShell>
+        <AppHeader title="Progress Log" />
+        <ProgressLogContent />
+      </AppShell>
   )
 }

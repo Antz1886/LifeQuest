@@ -38,7 +38,7 @@ export function UserStats() {
           </div>
           <Progress value={xpPercentage} className="h-3 [&>div]:bg-accent" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
           <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
             <Dumbbell className="w-8 h-8 text-primary"/>
             <div>
