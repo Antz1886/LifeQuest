@@ -94,7 +94,7 @@ const generateMeditationFlow = ai.defineFlow(
             },
           },
         },
-        prompt: script,
+        prompt: script, // Correctly pass the script string here
       });
 
     const audioMedia = ttsResponse.media;
