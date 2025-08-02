@@ -63,7 +63,9 @@ const getWeatherTool = ai.defineTool(
         inputSchema: z.object({ location: z.string() }),
         outputSchema: z.string(),
     },
-    async ({ location }) => getCurrentWeather(location)
+    async ({ location }) => {
+        return await getCurrentWeather(location);
+    }
 );
 
 const prompt = ai.definePrompt({
