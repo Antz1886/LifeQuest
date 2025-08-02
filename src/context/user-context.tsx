@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { userProfile as initialProfile, quests as initialQuests } from '@/lib/mock-data';
-import type { UserProfile, Quest, Project, ProjectTask, QuestCategory } from '@/lib/types';
+import type { UserProfile, Quest, Project, ProjectTask, QuestCategory, SavedMeditation } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { isSameDay, subDays, startOfDay, formatISO } from 'date-fns';
 
@@ -60,6 +60,7 @@ interface UserContextType {
   profile: UserProfile;
   quests: Quest[];
   projects: Project[];
+  savedMeditations: SavedMeditation[];
   setQuests: (quests: Quest[]) => void;
   addQuest: (questData: Omit<Quest, 'id' | 'isCompleted' | 'completedAt'>) => void;
   editQuest: (updatedQuest: Quest) => void;
@@ -70,6 +71,7 @@ interface UserContextType {
   addProjectTask: (projectId: string, taskText: string) => void;
   deleteProjectTask: (projectId: string, taskId: string) => void;
   updateProfileCustomization: (title: string, avatarUrl: string) => void;
+  addSavedMeditation: (meditationData: { prompt: string; script: string; audioDataUri: string }) => void;
   isLoaded: boolean;
 }
 
@@ -79,6 +81,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile>(initialProfile);
   const [quests, setQuests] = useState<Quest[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [savedMeditations, setSavedMeditations] = useState<SavedMeditation[]>([]);
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -90,14 +93,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       const savedProfile = localStorage.getItem(`userProfile_${userKey}`);
       const savedQuests = localStorage.getItem(`userQuests_${userKey}`);
       const savedProjects = localStorage.getItem(`userProjects_${userKey}`);
+      const savedMeditations = localStorage.getItem(`userMeditations_${userKey}`);
 
       const loadedProfile = savedProfile ? JSON.parse(savedProfile) : initialProfile;
       const loadedQuests = savedQuests ? JSON.parse(savedQuests) : initialQuests;
       const loadedProjects = savedProjects ? JSON.parse(savedProjects) : [];
+      const loadedMeditations = savedMeditations ? JSON.parse(savedMeditations) : [];
       
       setProfile(loadedProfile);
       setQuests(loadedQuests.map((q: Quest) => ({...q, date: q.date || formatISO(new Date(), { representation: 'date' })})));
       setProjects(loadedProjects);
+      setSavedMeditations(loadedMeditations);
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
@@ -105,6 +111,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       setProfile(initialProfile);
       setQuests(initialQuests);
       setProjects([]);
+      setSavedMeditations([]);
     } finally {
       setIsLoaded(true);
     }
@@ -132,6 +139,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     saveData('userProjects', projects);
   }, [projects, saveData]);
+
+  useEffect(() => {
+    saveData('userMeditations', savedMeditations);
+  }, [savedMeditations, saveData]);
 
 
   // Recalculate streaks and update profile state when quests change
@@ -293,12 +304,21 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  const addSavedMeditation = (meditationData: { prompt: string; script: string; audioDataUri: string }) => {
+    const newMeditation: SavedMeditation = {
+      ...meditationData,
+      id: `m-${Date.now()}`,
+      createdAt: Date.now(),
+    };
+    setSavedMeditations(prev => [newMeditation, ...prev]);
+  };
+
   if (!isLoaded) {
     return <div className="flex w-full h-screen items-center justify-center bg-background">Loading User Data...</div>;
   }
 
   return (
-    <UserContext.Provider value={{ profile, quests, projects, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask, deleteProjectTask, updateProfileCustomization, isLoaded }}>
+    <UserContext.Provider value={{ profile, quests, projects, savedMeditations, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask, deleteProjectTask, updateProfileCustomization, addSavedMeditation, isLoaded }}>
       {children}
     </UserContext.Provider>
   );

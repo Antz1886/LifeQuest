@@ -37,3 +37,11 @@ export interface Project {
   description: string;
   tasks: ProjectTask[];
 }
+
+export interface SavedMeditation {
+  id: string;
+  prompt: string;
+  script: string;
+  audioDataUri: string;
+  createdAt: number;
+}
