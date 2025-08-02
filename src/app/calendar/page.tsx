@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calendar as CalendarIcon, Check, Circle } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { useUser } from "@/context/user-context";
-import { isSameDay } from "date-fns";
+import { isSameDay, isValid } from "date-fns";
 import { Quest } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 
@@ -29,9 +29,19 @@ function CalendarPageContent() {
     const { quests, completeQuest } = useUser();
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
-    const questsForSelectedDay = selectedDate 
-        ? quests.filter(quest => isSameDay(new Date(quest.date), selectedDate))
+    const questsForSelectedDay = selectedDate
+        ? quests.filter(quest => {
+              const questDate = new Date(quest.date);
+              return isValid(questDate) && isSameDay(questDate, selectedDate);
+          })
         : [];
+        
+    const hasQuestsOnDate = (date: Date) => {
+        return quests.some(quest => {
+            const questDate = new Date(quest.date);
+            return isValid(questDate) && isSameDay(questDate, date);
+        });
+    };
 
     return (
         <main className="p-4 lg:p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -52,21 +62,12 @@ function CalendarPageContent() {
                             selected={selectedDate}
                             onSelect={setSelectedDate}
                             className="rounded-md border p-0"
-                            modifiers={{
-                                withQuests: (date) => quests.some(quest => isSameDay(new Date(quest.date), date)),
-                            }}
-                            modifiersStyles={{
-                                withQuests: {
-                                    fontWeight: 'bold',
-                                    color: 'hsl(var(--primary))',
-                                }
-                            }}
                              components={{
                                 DayContent: (props) => {
-                                    const hasQuests = quests.some(quest => isSameDay(new Date(quest.date), props.date));
+                                    const hasQuests = hasQuestsOnDate(props.date);
                                     return (
                                         <div className="relative h-full w-full flex items-center justify-center">
-                                            <span>{props.date.getDate()}</span>
+                                            <span className={cn(hasQuests && 'font-bold text-primary')}>{props.date.getDate()}</span>
                                             {hasQuests && <div className="absolute bottom-1 w-1 h-1 rounded-full bg-primary" />}
                                         </div>
                                     )
