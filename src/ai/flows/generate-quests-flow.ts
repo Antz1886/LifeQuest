@@ -9,6 +9,7 @@
  */
 
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
 import { QuestCategory, Project } from '@/lib/types';
 import { getCurrentWeather } from '@/services/weather';
@@ -67,6 +68,7 @@ const getWeatherTool = ai.defineTool(
 
 const prompt = ai.definePrompt({
   name: 'generateQuestsPrompt',
+  model: googleAI.model('gemini-1.5-flash-latest'),
   input: { schema: GenerateQuestsInputSchema },
   output: { schema: GenerateQuestsOutputSchema },
   tools: [getWeatherTool],
@@ -84,9 +86,6 @@ Based on the user's goals and active projects below, create a list of 5-7 quests
 If the user's goals are vague or unstated, create a balanced set of starter quests across different categories, drawing inspiration from their active projects if available.
 
 IMPORTANT: Use the 'getCurrentWeather' tool to get the weather for the user's location, which is '{{{location}}}'. Suggest weather-appropriate activities based on the result. For example, if it's sunny, suggest an outdoor 'Strength' or 'Mind' quest. If it's rainy, suggest an indoor one.
-
-User's Location:
-{{{location}}}
 
 User's Stated Goals:
 {{{goals}}}

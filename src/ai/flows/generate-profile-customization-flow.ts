@@ -9,6 +9,7 @@
  */
 
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
 import { QuestCategory, Quest, UserProfile } from '@/lib/types';
 
@@ -55,6 +56,7 @@ export async function generateProfileCustomization(input: GenerateProfileCustomi
 
 const titleGenerationPrompt = ai.definePrompt({
     name: 'generateProfileTitlePrompt',
+    model: googleAI.model('gemini-1.5-flash-latest'),
     input: { schema: GenerateProfileCustomizationInputSchema },
     output: { schema: z.object({ title: z.string() }) },
     prompt: `You are a creative assistant for a gamified productivity app. Your task is to generate a cool, inspiring title for a user based on their profile and recently completed quests.
