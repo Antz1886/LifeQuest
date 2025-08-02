@@ -83,7 +83,7 @@ Based on the user's goals and active projects below, create a list of 5-7 quests
 
 If the user's goals are vague or unstated, create a balanced set of starter quests across different categories, drawing inspiration from their active projects if available.
 
-IMPORTANT: Use the 'getCurrentWeather' tool to check the weather for the user's location. Suggest weather-appropriate activities. For example, if it's sunny, suggest an outdoor 'Strength' or 'Mind' quest. If it's rainy, suggest an indoor one.
+IMPORTANT: Use the 'getCurrentWeather' tool to get the weather for the user's location, which is '{{{location}}}'. Suggest weather-appropriate activities based on the result. For example, if it's sunny, suggest an outdoor 'Strength' or 'Mind' quest. If it's rainy, suggest an indoor one.
 
 User's Location:
 {{{location}}}
