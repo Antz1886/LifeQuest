@@ -92,28 +92,12 @@ const generateProfileCustomizationFlow = ai.defineFlow(
     }
 
     // 2. Generate the avatar
-    let imageGenerationPrompt = `Generate a fantasy-style character avatar for a productivity app profile. The character should be a stylized, slightly abstract representation, not a photorealistic person.
+    // Construct a simple, direct prompt for the image generation model.
+    const simpleAvatarPrompt = `Fantasy-style character bust, profile picture for a productivity app. Title: "${title}". ${input.avatarPrompt || ''}. Modern, vibrant, inspiring, dark, epic theme. Centered. Epic lighting.`;
 
-The character's title is: "${title}".
-
-Incorporate visual elements that reflect this title. For example:
-- For "Code Samurai", maybe a character with a glowing keyboard and a warrior stance.
-- For "Mindful Master", a serene character surrounded by calm energy.
-- For "Cyber-Athlete", a dynamic figure with circuits and athletic gear.`;
-
-    if (input.avatarPrompt) {
-        imageGenerationPrompt += `
-
-The user has provided this creative direction: "${input.avatarPrompt}". Please incorporate it.`;
-    }
-
-    imageGenerationPrompt += `
-
-The style should be modern, vibrant, and inspiring, with a dark, fantasy, epic theme. It's a profile picture. Focus on the bust/headshot. Centered. Epic lighting.`;
-    
     const { media } = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: imageGenerationPrompt,
+      prompt: simpleAvatarPrompt,
       config: {
         responseModalities: ['IMAGE', 'TEXT'],
       },
