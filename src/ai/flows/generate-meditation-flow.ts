@@ -81,7 +81,7 @@ const generateMeditationFlow = ai.defineFlow(
     const scriptResponse = await scriptGenerationPrompt(input);
     const script = scriptResponse.output?.script;
     if (!script) {
-        throw new Error("Failed to generate meditation script.");
+        throw new Error("Failed to generate meditation script from AI model.");
     }
     
     // 2. Convert the script to audio
