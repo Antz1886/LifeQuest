@@ -36,7 +36,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { isToday } from "date-fns";
+import { isToday, isTomorrow, addDays } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 
 const categoryIcons: Record<QuestCategory, React.ReactNode> = {
@@ -134,7 +134,7 @@ function QuestItem({ quest }: { quest: Quest }) {
   );
 }
 
-function QuestList({ quests }: { quests: Quest[] }) {
+function QuestList({ quests, emptyMessage }: { quests: Quest[], emptyMessage?: string }) {
     return (
         <AnimatePresence>
             {quests.length > 0 ? (
@@ -145,7 +145,7 @@ function QuestList({ quests }: { quests: Quest[] }) {
                     animate={{ opacity: 1 }}
                     className="text-center text-muted-foreground py-8"
                 >
-                    <p className="mb-2">Your quest board is clear!</p>
+                    <p className="mb-2">{emptyMessage || "Your quest board is clear!"}</p>
                     <p className="text-sm">Add a new quest or generate one with AI to start your journey.</p>
                 </motion.div>
             )}
@@ -153,32 +153,10 @@ function QuestList({ quests }: { quests: Quest[] }) {
     )
 }
 
-export function QuestBoard() {
-  const { quests } = useUser();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const categories: QuestCategory[] = ["Mind", "Strength", "Code", "Wisdom", "Legacy"];
-
-  const todaysQuests = quests.filter(q => isToday(new Date(q.date)) && !q.isCompleted);
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-col md:flex-row items-start md:items-center md:justify-between gap-4">
-        <CardTitle className="font-headline text-2xl flex items-center gap-2">
-          <Swords className="text-primary" />
-          Today's Quests
-        </CardTitle>
-        <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
-          <GenerateQuestsDialog />
-          <AddEditQuestDialog mode="add" open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <Button className="gap-2 w-full md:w-auto">
-              <PlusCircle className="w-4 h-4" />
-              <span>Add Quest</span>
-            </Button>
-          </AddEditQuestDialog>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="All" className="w-full">
+function QuestCategoryTabs({ quests }: { quests: Quest[] }) {
+    const categories: QuestCategory[] = ["Mind", "Strength", "Code", "Wisdom", "Legacy"];
+    return (
+         <Tabs defaultValue="All" className="w-full">
           <div className="md:hidden">
             <ScrollArea className="w-full whitespace-nowrap rounded-md">
               <TabsList className="grid w-max grid-cols-6">
@@ -201,18 +179,53 @@ export function QuestBoard() {
             ))}
           </TabsList>
           <TabsContent value="All" className="mt-4 space-y-3">
-              <QuestList quests={todaysQuests} />
+              <QuestList quests={quests} emptyMessage="No quests for this day."/>
           </TabsContent>
           {categories.map((cat) => (
             <TabsContent key={cat} value={cat} className="mt-4 space-y-3">
-                <QuestList quests={todaysQuests.filter((q) => q.category === cat)} />
-                {todaysQuests.filter((q) => q.category === cat).length === 0 && (
-                     <div className="text-center text-muted-foreground py-8">
-                        <p className="text-sm">No quests in this category.</p>
-                     </div>
-                )}
+                <QuestList quests={quests.filter((q) => q.category === cat)} emptyMessage="No quests in this category for this day."/>
             </TabsContent>
           ))}
+        </Tabs>
+    )
+}
+
+export function QuestBoard() {
+  const { quests } = useUser();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  const todaysQuests = quests.filter(q => isToday(new Date(q.date)) && !q.isCompleted);
+  const tomorrowsQuests = quests.filter(q => isTomorrow(new Date(q.date)) && !q.isCompleted);
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center md:justify-between gap-4">
+        <CardTitle className="font-headline text-2xl flex items-center gap-2">
+          <Swords className="text-primary" />
+          Upcoming Quests
+        </CardTitle>
+        <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+          <GenerateQuestsDialog />
+          <AddEditQuestDialog mode="add" open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <Button className="gap-2 w-full md:w-auto">
+              <PlusCircle className="w-4 h-4" />
+              <span>Add Quest</span>
+            </Button>
+          </AddEditQuestDialog>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="today" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="today">Today</TabsTrigger>
+                <TabsTrigger value="tomorrow">Tomorrow</TabsTrigger>
+            </TabsList>
+            <TabsContent value="today" className="mt-4">
+                <QuestCategoryTabs quests={todaysQuests} />
+            </TabsContent>
+            <TabsContent value="tomorrow" className="mt-4">
+                 <QuestCategoryTabs quests={tomorrowsQuests} />
+            </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
