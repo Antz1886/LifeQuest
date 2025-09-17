@@ -32,6 +32,7 @@ import { Quest, QuestCategory } from '@/lib/types';
 import { PlusCircle, Edit, CalendarIcon } from 'lucide-react';
 import { format, formatISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '../ui/scroll-area';
 
 const questSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long."),
@@ -51,6 +52,15 @@ interface AddEditQuestDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const timeOptions = Array.from({ length: 48 }, (_, i) => {
+    const hour = Math.floor(i / 2);
+    const minute = i % 2 === 0 ? '00' : '30';
+    const period = hour < 12 ? 'AM' : 'PM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${String(displayHour).padStart(2, '0')}:${minute} ${period}`;
+});
+
+
 export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }: AddEditQuestDialogProps) {
   const { addQuest, editQuest } = useUser();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -61,7 +71,7 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
       title: quest?.title || '',
       category: quest?.category || 'Mind',
       xp: quest?.xp || 50,
-      time: quest?.time || '',
+      time: quest?.time || '09:00 AM',
       date: quest ? new Date(quest.date) : new Date(),
     },
   });
@@ -78,7 +88,7 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
         title: '',
         category: 'Mind',
         xp: 50,
-        time: '',
+        time: '09:00 AM',
         date: new Date(),
       });
     }
@@ -187,7 +197,24 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
             </div>
             <div>
               <Label htmlFor="time">Time</Label>
-              <Input id="time" placeholder="e.g., '10 AM' or '30 min'" {...register('time')} />
+               <Controller
+                name="time"
+                control={control}
+                render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger id="time">
+                        <SelectValue placeholder="Select a time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <ScrollArea className="h-72">
+                        {timeOptions.map(time => (
+                            <SelectItem key={time} value={time}>{time}</SelectItem>
+                        ))}
+                      </ScrollArea>
+                    </SelectContent>
+                    </Select>
+                )}
+                />
               {errors.time && <p className="text-red-500 text-sm mt-1">{errors.time.message}</p>}
             </div>
           </div>
