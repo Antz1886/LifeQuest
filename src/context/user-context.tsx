@@ -2,10 +2,12 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { useAuth } from './auth-context';
 import { userProfile as initialProfile, quests as initialQuests } from '@/lib/mock-data';
 import type { UserProfile, Quest, Project, ProjectTask, QuestCategory, SavedMeditation } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { isSameDay, subDays, startOfDay, formatISO } from 'date-fns';
+import { Loader2 } from 'lucide-react';
 
 
 // Helper function to calculate streaks
@@ -78,6 +80,7 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
+  const { user: authUser, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<UserProfile>(initialProfile);
   const [quests, setQuests] = useState<Quest[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -85,18 +88,25 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const userKey = 'guest';
+  const userKey = authUser ? authUser.uid : 'guest';
 
   // Load data from localStorage
   useEffect(() => {
+    if (authLoading) return; // Wait for auth to settle
+
     try {
       const savedProfile = localStorage.getItem(`userProfile_${userKey}`);
       const savedQuests = localStorage.getItem(`userQuests_${userKey}`);
       const savedProjects = localStorage.getItem(`userProjects_${userKey}`);
       const savedMeditations = localStorage.getItem(`userMeditations_${userKey}`);
 
-      const loadedProfile = savedProfile ? JSON.parse(savedProfile) : initialProfile;
-      const loadedQuests = savedQuests ? JSON.parse(savedQuests) : initialQuests;
+      let loadedProfile = savedProfile ? JSON.parse(savedProfile) : initialProfile;
+      if (authUser && !savedProfile) {
+          loadedProfile.name = authUser.displayName || loadedProfile.name;
+          loadedProfile.avatarUrl = authUser.photoURL || loadedProfile.avatarUrl;
+      }
+      
+      const loadedQuests = savedQuests ? JSON.parse(savedQuests) : (userKey !== 'guest' ? [] : initialQuests);
       const loadedProjects = savedProjects ? JSON.parse(savedProjects) : [];
       const loadedMeditations = savedMeditations ? JSON.parse(savedMeditations) : [];
       
@@ -115,7 +125,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoaded(true);
     }
-  }, []);
+  }, [userKey, authLoading, authUser]);
 
   // Save data to localStorage
   const saveData = useCallback((key: string, data: any) => {
@@ -126,7 +136,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
               console.error("Failed to save data to localStorage", error);
           }
       }
-  }, [isLoaded]);
+  }, [isLoaded, userKey]);
 
   useEffect(() => {
     saveData('userProfile', profile);
@@ -313,8 +323,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setSavedMeditations(prev => [newMeditation, ...prev]);
   };
 
-  if (!isLoaded) {
-    return <div className="flex w-full h-screen items-center justify-center bg-background">Loading User Data...</div>;
+  if (!isLoaded || authLoading) {
+    return (
+        <div className="flex w-full h-screen items-center justify-center bg-background">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+    );
   }
 
   return (

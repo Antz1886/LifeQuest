@@ -3,6 +3,7 @@
 
 import Link from 'next/link';
 import { useUser } from '@/context/user-context';
+import { useAuth } from '@/context/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -13,14 +14,17 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu"
-import { MoreVertical, LayoutGrid, Map, BarChart3, BrainCircuit, Settings, LogOut, Flame } from 'lucide-react';
+import { Map, BarChart3, BrainCircuit, LogOut, Flame } from 'lucide-react';
 
 export function AppHeader({ title }: { title: string }) {
-    const { profile, isLoaded } = useUser();
+    const { profile, isLoaded: isUserLoaded } = useUser();
+    const { user: authUser, logout, loading: isAuthLoading } = useAuth();
     const xpPercentage = (profile.xp / profile.xpToNextLevel) * 100;
 
-    const displayName = isLoaded ? profile.name : 'Adventurer';
-    const displayAvatar = isLoaded ? profile.avatarUrl : '';
+    const isLoaded = isUserLoaded && !isAuthLoading;
+
+    const displayName = isLoaded && authUser ? authUser.displayName || profile.name : 'Adventurer';
+    const displayAvatar = isLoaded && authUser ? authUser.photoURL || profile.avatarUrl : '';
 
     return (
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">
@@ -50,13 +54,18 @@ export function AppHeader({ title }: { title: string }) {
                             </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuLabel>{profile.name}</DropdownMenuLabel>
+                            <DropdownMenuLabel>{displayName}</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <Link href="/profile" passHref><DropdownMenuItem>Profile</DropdownMenuItem></Link>
                              <DropdownMenuSeparator />
                              <Link href="/weekly-map" passHref><DropdownMenuItem><Map className="mr-2 h-4 w-4"/>Weekly Map</DropdownMenuItem></Link>
                              <Link href="/progress-log" passHref><DropdownMenuItem><BarChart3 className="mr-2 h-4 w-4"/>Progress Log</DropdownMenuItem></Link>
                              <Link href="/zen-zone" passHref><DropdownMenuItem><BrainCircuit className="mr-2 h-4 w-4"/>Zen Zone</DropdownMenuItem></Link>
+                             <DropdownMenuSeparator />
+                             <DropdownMenuItem onClick={logout} className="text-red-400 focus:text-red-400">
+                                 <LogOut className="mr-2 h-4 w-4"/>
+                                 Sign Out
+                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { UserProvider } from "@/context/user-context";
+import { AuthProvider, AuthGate } from "@/context/auth-context";
 import { Inter, Space_Grotesk } from 'next/font/google';
 
 const inter = Inter({
@@ -33,10 +34,14 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </head>
       <body className="font-body antialiased bg-background text-foreground">
-        <UserProvider>
-            {children}
-            <Toaster />
-        </UserProvider>
+        <AuthProvider>
+            <AuthGate>
+                <UserProvider>
+                    {children}
+                    <Toaster />
+                </UserProvider>
+            </AuthGate>
+        </AuthProvider>
       </body>
     </html>
   );

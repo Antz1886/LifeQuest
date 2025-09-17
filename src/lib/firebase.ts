@@ -3,7 +3,10 @@
 
 import { initializeApp, getApps, getApp, FirebaseOptions } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { Loader2 } from "lucide-react";
 
+// This is a mock config. In a real application, you would use your own
+// Firebase project configuration.
 const firebaseConfig: FirebaseOptions = {
   apiKey: "AIzaSyAkpKVapgO24sH7fv8MEb4aS3t2Vndpg1E",
   authDomain: "lifequest-cc4l7.firebaseapp.com",
