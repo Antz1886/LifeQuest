@@ -8,12 +8,12 @@ import { Loader2 } from "lucide-react";
 // This is a mock config. In a real application, you would use your own
 // Firebase project configuration.
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "AIzaSyAkpKVapgO24sH7fv8MEb4aS3t2Vndpg1E",
-  authDomain: "lifequest-cc4l7.firebaseapp.com",
-  projectId: "lifequest-cc4l7",
-  storageBucket: "lifequest-cc4l7.appspot.com",
-  messagingSenderId: "55049413123",
-  appId: "1:55049413123:web:6330cc4af7810eab12a436",
+  "projectId": "lifequest-cc4l7",
+  "appId": "1:55049413123:web:6330cc4af7810eab12a436",
+  "storageBucket": "lifequest-cc4l7.firebasestorage.app",
+  "apiKey": "AIzaSyBoVr_1xTS13AirQ4u5BEnIROExxYNrV8c",
+  "authDomain": "lifequest-cc4l7.firebaseapp.com",
+  "messagingSenderId": "55049413123"
 };
 
 // Initialize Firebase for SSR
