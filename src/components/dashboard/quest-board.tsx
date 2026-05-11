@@ -287,6 +287,7 @@ export function QuestBoard() {
 
   const todaysQuests = quests.filter(q => isToday(new Date(q.date)) && !q.isCompleted);
   const tomorrowsQuests = quests.filter(q => isTomorrow(new Date(q.date)) && !q.isCompleted);
+  const completedHistory = quests.filter(q => q.isCompleted).sort((a,b) => (b.completedAt || 0) - (a.completedAt || 0));
 
   return (
     <Card className="border-none shadow-none md:border md:shadow-sm bg-transparent md:bg-card overflow-hidden">
@@ -294,7 +295,7 @@ export function QuestBoard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <CardTitle className="font-headline text-2xl flex items-center gap-2">
             <Swords className="text-primary w-6 h-6" />
-            <span className="tracking-tight">Upcoming Quests</span>
+            <span className="tracking-tight">Quest Board</span>
           </CardTitle>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <GenerateQuestsDialog />
@@ -309,15 +310,23 @@ export function QuestBoard() {
       </CardHeader>
       <CardContent className="px-2 md:px-6">
         <Tabs defaultValue="today" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="today">Today</TabsTrigger>
-                <TabsTrigger value="tomorrow">Tomorrow</TabsTrigger>
+                <TabsTrigger value="tomorrow">Upcoming</TabsTrigger>
+                <TabsTrigger value="history" className="gap-2"><History className="w-3 h-3"/>History</TabsTrigger>
             </TabsList>
             <TabsContent value="today" className="mt-4">
                 <QuestCategoryTabs quests={todaysQuests} />
             </TabsContent>
             <TabsContent value="tomorrow" className="mt-4">
                  <QuestCategoryTabs quests={tomorrowsQuests} />
+            </TabsContent>
+            <TabsContent value="history" className="mt-4 space-y-4">
+                <div className="flex items-center justify-between px-2 mb-2">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Completed Journey</h3>
+                    <Badge variant="outline" className="font-mono">{completedHistory.length} Quests</Badge>
+                </div>
+                <QuestList quests={completedHistory} emptyMessage="Your history is empty. Start your first quest!" />
             </TabsContent>
         </Tabs>
       </CardContent>

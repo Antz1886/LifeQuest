@@ -119,12 +119,31 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         }
       });
 
-      // 2. Sync Quests
+      // 2. Sync Quests & Handle Migration
       const questsRef = collection(db, 'users', authUser.uid, 'quests');
       const qQuests = query(questsRef, orderBy('createdAt', 'desc'));
       const unsubQuests = onSnapshot(qQuests, (snapshot) => {
         const qList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Quest));
         setQuests(qList);
+
+        // MIGRATION LOGIC: If Firestore is empty but localStorage has guest data, offer to migrate
+        if (qList.length === 0) {
+            const guestQuests = localStorage.getItem('userQuests_guest');
+            if (guestQuests) {
+                const parsed = JSON.parse(guestQuests);
+                if (parsed.length > 0) {
+                    const batch = writeBatch(db);
+                    parsed.forEach((q: Quest) => {
+                        const newRef = doc(db, 'users', authUser.uid, 'quests', q.id);
+                        batch.set(newRef, q);
+                    });
+                    batch.commit().then(() => {
+                        toast({ title: "Data Synced!", description: "Your local history has been moved to the cloud." });
+                        localStorage.removeItem('userQuests_guest');
+                    });
+                }
+            }
+        }
       });
 
       // 3. Sync Projects
