@@ -40,6 +40,12 @@ next-env.d.ts
 .genkit/*
 .env*
 
+# studio and agents
+.agents/
+.vscode/
+project.zip
+studio.json
+
 # firebase
 firebase-debug.log
 firestore-debug.log

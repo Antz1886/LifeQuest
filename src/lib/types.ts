@@ -1,4 +1,7 @@
 export type QuestCategory = "Mind" | "Strength" | "Code" | "Wisdom" | "Legacy";
+export type EnergyLevel = "Low" | "Medium" | "High";
+
+export type Priority = 1 | 2 | 3 | 4; // 1: Urgent/Important, 2: Important, 3: Urgent, 4: Backlog
 
 export interface Quest {
   id: string;
@@ -9,6 +12,11 @@ export interface Quest {
   time: string;
   completedAt?: number;
   date: string; // ISO date string
+  energyLevel: EnergyLevel;
+  projectId?: string;
+  createdAt: number;
+  priority: Priority;
+  notes?: string;
 }
 
 export interface UserProfile {

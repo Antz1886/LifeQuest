@@ -58,7 +58,7 @@ async function toWav(
 
 const scriptGenerationPrompt = ai.definePrompt({
     name: 'generateMeditationScriptPrompt',
-    model: googleAI.model('gemini-1.5-flash-latest'),
+    model: googleAI.model('gemini-2.5-flash'),
     input: { schema: GenerateMeditationInputSchema },
     output: { schema: z.object({ script: z.string() }) },
     prompt: `You are a world-class meditation guide. A user has requested a specific type of meditation. Generate a soothing, supportive, and well-structured meditation script based on their request. The script should be formatted with paragraphs for easy reading.

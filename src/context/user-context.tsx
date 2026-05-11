@@ -111,7 +111,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       const loadedMeditations = savedMeditations ? JSON.parse(savedMeditations) : [];
       
       setProfile(loadedProfile);
-      setQuests(loadedQuests.map((q: Quest) => ({...q, date: q.date || formatISO(new Date(), { representation: 'date' })})));
+      setQuests(loadedQuests.map((q: Quest) => ({
+          ...q, 
+          date: q.date || formatISO(new Date(), { representation: 'date' }),
+          energyLevel: q.energyLevel || "Medium",
+          createdAt: q.createdAt || Date.now(),
+          priority: q.priority || 2,
+          notes: q.notes || ""
+      })));
       setProjects(loadedProjects);
       setSavedMeditations(loadedMeditations);
 
@@ -133,7 +140,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           try {
               localStorage.setItem(`${key}_${userKey}`, JSON.stringify(data));
           } catch (error) {
-              console.error("Failed to save data to localStorage", error);
+              if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+                  console.warn("Storage quota exceeded. Clearing older meditations to make room.");
+                  if (key === 'userMeditations') {
+                      // If it's meditations failing, we try to save only the most recent one
+                      const truncated = data.slice(0, 1);
+                      localStorage.setItem(`${key}_${userKey}`, JSON.stringify(truncated));
+                  }
+              } else {
+                console.error("Failed to save data to localStorage", error);
+              }
           }
       }
   }, [isLoaded, userKey]);
@@ -175,6 +191,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       ...questData,
       id: `q-${Date.now()}-${Math.random()}`,
       isCompleted: false,
+      createdAt: Date.now(),
     };
     setQuests(prevQuests => [...prevQuests, newQuest]);
     toast({ title: "Quest Added!", description: "A new quest has been added to your board." });
@@ -203,7 +220,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         )
     );
 
-    const xpChange = isNowCompleted ? quest.xp : -quest.xp;
+    // Adaptive XP Calculation
+    const daysOld = Math.floor((Date.now() - quest.createdAt) / (1000 * 60 * 60 * 24));
+    const finalXP = (isNowCompleted && daysOld >= 3) ? Math.floor(quest.xp * 1.5) : quest.xp;
+    const xpChange = isNowCompleted ? finalXP : -quest.xp;
     
     let leveledUp = false;
     let newLevelCache = profile.level;
@@ -233,9 +253,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
                 description: `Congratulations! You've reached Level ${newLevelCache}.`,
             });
         } else {
+            const bonusMsg = daysOld >= 3 ? " (includes 50% Anti-Procrastination bonus!)" : "";
             toast({
                 title: "Quest Complete!",
-                description: `You earned ${quest.xp} XP!`,
+                description: `You earned ${finalXP} XP!${bonusMsg}`,
             });
         }
     } else {
@@ -320,7 +341,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       id: `m-${Date.now()}`,
       createdAt: Date.now(),
     };
-    setSavedMeditations(prev => [newMeditation, ...prev]);
+    setSavedMeditations(prev => {
+        const updated = [newMeditation, ...prev];
+        // Keep library small to avoid localStorage quota issues with large audio base64 strings
+        return updated.slice(0, 3);
+    });
   };
 
   if (!isLoaded || authLoading) {

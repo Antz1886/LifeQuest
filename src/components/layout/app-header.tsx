@@ -29,10 +29,12 @@ export function AppHeader({ title }: { title: string }) {
     return (
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">
             <div className="flex items-center gap-2">
-                 <Link href="/" className="flex items-center gap-2">
+                 <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                     <Flame className="w-7 h-7 text-primary" />
+                    <span className="text-xl font-headline font-bold tracking-tight hidden sm:inline-block">LifeQuest</span>
                 </Link>
-                 <h1 className="text-xl font-headline font-semibold">{title}</h1>
+                 <div className="h-6 w-px bg-border hidden sm:block mx-2" />
+                 <h1 className="text-xl font-headline font-semibold text-muted-foreground">{title}</h1>
             </div>
            
             <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">

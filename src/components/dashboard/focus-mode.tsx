@@ -115,6 +115,13 @@ export function FocusMode({ children, quest }: { children: ReactNode, quest: Que
                         </div>
                     </div>
 
+                    {quest.notes && (
+                        <div className="w-full mt-2 mb-4 p-3 rounded-xl bg-muted/50 border border-border/50 max-h-32 overflow-y-auto scrollbar-hide">
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Quest Notes</p>
+                            <p className="text-xs text-foreground/80 whitespace-pre-wrap">{quest.notes}</p>
+                        </div>
+                    )}
+
                     {showBreakMessage && (
                         <div className="text-center p-3 rounded-lg bg-muted border border-green-500/50">
                             <p className="font-semibold flex items-center gap-2"><Coffee className="text-green-500"/> Break time!</p>

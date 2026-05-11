@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -40,6 +41,10 @@ const questSchema = z.object({
   xp: z.coerce.number().min(10, "XP must be at least 10.").max(200, "XP cannot exceed 200."),
   time: z.string().min(1, "Time is required."),
   date: z.date({ required_error: "A date is required." }),
+  energyLevel: z.enum(["Low", "Medium", "High"]),
+  projectId: z.string().optional(),
+  priority: z.coerce.number().min(1).max(4),
+  notes: z.string().optional(),
 });
 
 type QuestFormData = z.infer<typeof questSchema>;
@@ -62,7 +67,7 @@ const timeOptions = Array.from({ length: 48 }, (_, i) => {
 
 
 export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }: AddEditQuestDialogProps) {
-  const { addQuest, editQuest } = useUser();
+  const { addQuest, editQuest, projects } = useUser();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<QuestFormData>({
@@ -73,6 +78,10 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
       xp: quest?.xp || 50,
       time: quest?.time || '09:00 AM',
       date: quest ? new Date(quest.date) : new Date(),
+      energyLevel: quest?.energyLevel || 'Medium',
+      projectId: quest?.projectId || '',
+      priority: quest?.priority || 2,
+      notes: quest?.notes || '',
     },
   });
 
@@ -84,12 +93,20 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
         xp: quest.xp,
         time: quest.time,
         date: new Date(quest.date),
+        energyLevel: quest.energyLevel,
+        projectId: quest.projectId || 'none',
+        priority: quest.priority,
+        notes: quest.notes || '',
       } : {
         title: '',
         category: 'Mind',
         xp: 50,
         time: '09:00 AM',
         date: new Date(),
+        energyLevel: 'Medium',
+        projectId: 'none',
+        priority: 2,
+        notes: '',
       });
     }
   }, [open, quest, reset]);
@@ -99,6 +116,7 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
     const questData = {
         ...data,
         date: formatISO(data.date, { representation: 'date' }),
+        projectId: data.projectId === 'none' ? undefined : data.projectId,
     };
 
     if (mode === 'edit' && quest) {
@@ -191,10 +209,85 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="xp">XP</Label>
+              <Label htmlFor="energyLevel">Energy Level</Label>
+              <Controller
+                name="energyLevel"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger id="energyLevel">
+                      <SelectValue placeholder="Select energy" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Low">Low</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="High">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div>
+              <Label htmlFor="projectId">Link to Project (Optional)</Label>
+               <Controller
+                name="projectId"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger id="projectId">
+                      <SelectValue placeholder="No project" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {projects.map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="priority">Priority (Eisenhower Matrix)</Label>
+               <Controller
+                name="priority"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={(val) => field.onChange(parseInt(val))} defaultValue={field.value.toString()}>
+                    <SelectTrigger id="priority">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Urgent & Important</SelectItem>
+                      <SelectItem value="2">Important (Not Urgent)</SelectItem>
+                      <SelectItem value="3">Urgent (Not Important)</SelectItem>
+                      <SelectItem value="4">Backlog (Neither)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div>
+              <Label htmlFor="xp">Experience Points (XP)</Label>
               <Input id="xp" type="number" {...register('xp')} />
               {errors.xp && <p className="text-red-500 text-sm mt-1">{errors.xp.message}</p>}
             </div>
+          </div>
+
+          <div>
+             <Label htmlFor="notes">Quest Notes (Details/Artifacts)</Label>
+             <Textarea 
+                id="notes" 
+                placeholder="Add links, resources, or specific sub-tasks..." 
+                className="min-h-[80px]"
+                {...register('notes')}
+             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="time">Time</Label>
                <Controller

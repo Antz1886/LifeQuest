@@ -56,7 +56,7 @@ export async function generateProfileCustomization(input: GenerateProfileCustomi
 
 const titleGenerationPrompt = ai.definePrompt({
     name: 'generateProfileTitlePrompt',
-    model: googleAI.model('gemini-1.5-flash-latest'),
+    model: googleAI.model('gemini-2.5-flash'),
     input: { schema: GenerateProfileCustomizationInputSchema },
     output: { schema: z.object({ title: z.string() }) },
     prompt: `You are a creative assistant for a gamified productivity app. Your task is to generate a cool, inspiring title for a user based on their profile and recently completed quests.

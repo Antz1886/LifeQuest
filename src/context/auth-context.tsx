@@ -25,6 +25,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      const savedToken = sessionStorage.getItem('google_access_token');
+      if (savedToken) setAccessToken(savedToken);
       setLoading(false);
     });
     return () => unsubscribe();
@@ -37,7 +39,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const result = await signInWithPopup(auth, googleProvider);
         const credential = GoogleAuthProvider.credentialFromResult(result);
         if (credential) {
-            setAccessToken(credential.accessToken || null);
+            const token = credential.accessToken || null;
+            setAccessToken(token);
+            if (token) sessionStorage.setItem('google_access_token', token);
         }
         setUser(result.user);
     } catch (error) {
@@ -53,6 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await signOut(auth);
       setUser(null);
       setAccessToken(null);
+      sessionStorage.removeItem('google_access_token');
     } catch (error) {
         console.error("Sign out failed:", error)
     } finally {
