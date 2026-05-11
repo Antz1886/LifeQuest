@@ -289,23 +289,25 @@ export function QuestBoard() {
   const tomorrowsQuests = quests.filter(q => isTomorrow(new Date(q.date)) && !q.isCompleted);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-col md:flex-row items-start md:items-center md:justify-between gap-4">
-        <CardTitle className="font-headline text-2xl flex items-center gap-2">
-          <Swords className="text-primary" />
-          Upcoming Quests
-        </CardTitle>
-        <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
-          <GenerateQuestsDialog />
-          <AddEditQuestDialog mode="add" open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <Button className="gap-2 w-full md:w-auto">
-              <PlusCircle className="w-4 h-4" />
-              <span>Add Quest</span>
-            </Button>
-          </AddEditQuestDialog>
+    <Card className="border-none shadow-none md:border md:shadow-sm bg-transparent md:bg-card overflow-hidden">
+      <CardHeader className="px-4 md:px-6 pb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <CardTitle className="font-headline text-2xl flex items-center gap-2">
+            <Swords className="text-primary w-6 h-6" />
+            <span className="tracking-tight">Upcoming Quests</span>
+          </CardTitle>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <GenerateQuestsDialog />
+            <AddEditQuestDialog mode="add" open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <Button className="gap-2 flex-1 sm:flex-none h-10 px-4 rounded-xl shadow-lg shadow-primary/20">
+                <PlusCircle className="w-4 h-4" />
+                <span className="text-xs font-bold uppercase tracking-wider">New Quest</span>
+              </Button>
+            </AddEditQuestDialog>
+          </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-2 md:px-6">
         <Tabs defaultValue="today" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="today">Today</TabsTrigger>

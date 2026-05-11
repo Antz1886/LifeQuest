@@ -8,6 +8,17 @@ import type { UserProfile, Quest, Project, ProjectTask, QuestCategory, SavedMedi
 import { useToast } from '@/hooks/use-toast';
 import { isSameDay, subDays, startOfDay, formatISO } from 'date-fns';
 import { Loader2 } from 'lucide-react';
+import { db } from '@/lib/firebase';
+import { 
+  doc, 
+  onSnapshot, 
+  setDoc, 
+  collection, 
+  query, 
+  orderBy, 
+  deleteDoc,
+  writeBatch
+} from 'firebase/firestore';
 
 
 // Helper function to calculate streaks
@@ -90,85 +101,83 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const userKey = authUser ? authUser.uid : 'guest';
 
-  // Load data from localStorage
+  // Real-time Firestore Sync
   useEffect(() => {
-    if (authLoading) return; // Wait for auth to settle
+    if (authLoading) return;
 
-    try {
-      const savedProfile = localStorage.getItem(`userProfile_${userKey}`);
-      const savedQuests = localStorage.getItem(`userQuests_${userKey}`);
-      const savedProjects = localStorage.getItem(`userProjects_${userKey}`);
-      const savedMeditations = localStorage.getItem(`userMeditations_${userKey}`);
-
-      let loadedProfile = savedProfile ? JSON.parse(savedProfile) : initialProfile;
-      if (authUser && !savedProfile) {
-          loadedProfile.name = authUser.displayName || loadedProfile.name;
-          loadedProfile.avatarUrl = authUser.photoURL || loadedProfile.avatarUrl;
-      }
+    if (authUser) {
+      // Authenticated User: Use Firestore
+      const userDocRef = doc(db, 'users', authUser.uid);
       
-      const loadedQuests = savedQuests ? JSON.parse(savedQuests) : (userKey !== 'guest' ? [] : initialQuests);
-      const loadedProjects = savedProjects ? JSON.parse(savedProjects) : [];
-      const loadedMeditations = savedMeditations ? JSON.parse(savedMeditations) : [];
-      
-      setProfile(loadedProfile);
-      setQuests(loadedQuests.map((q: Quest) => ({
-          ...q, 
-          date: q.date || formatISO(new Date(), { representation: 'date' }),
-          energyLevel: q.energyLevel || "Medium",
-          createdAt: q.createdAt || Date.now(),
-          priority: q.priority || 2,
-          notes: q.notes || ""
-      })));
-      setProjects(loadedProjects);
-      setSavedMeditations(loadedMeditations);
+      // 1. Sync Profile
+      const unsubProfile = onSnapshot(userDocRef, (snapshot) => {
+        if (snapshot.exists()) {
+          setProfile(snapshot.data() as UserProfile);
+        } else {
+          const init = { ...initialProfile, name: authUser.displayName || initialProfile.name, avatarUrl: authUser.photoURL || initialProfile.avatarUrl };
+          setDoc(userDocRef, init);
+        }
+      });
 
-    } catch (error) {
-      console.error("Failed to load data from localStorage", error);
-      // Set to defaults if loading fails
-      setProfile(initialProfile);
-      setQuests(initialQuests);
-      setProjects([]);
-      setSavedMeditations([]);
-    } finally {
+      // 2. Sync Quests
+      const questsRef = collection(db, 'users', authUser.uid, 'quests');
+      const qQuests = query(questsRef, orderBy('createdAt', 'desc'));
+      const unsubQuests = onSnapshot(qQuests, (snapshot) => {
+        const qList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Quest));
+        setQuests(qList);
+      });
+
+      // 3. Sync Projects
+      const projectsRef = collection(db, 'users', authUser.uid, 'projects');
+      const unsubProjects = onSnapshot(projectsRef, (snapshot) => {
+        const pList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+        setProjects(pList);
+      });
+
+      // 4. Sync Meditations
+      const medsRef = collection(db, 'users', authUser.uid, 'meditations');
+      const qMeds = query(medsRef, orderBy('createdAt', 'desc'));
+      const unsubMeds = onSnapshot(qMeds, (snapshot) => {
+        const mList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SavedMeditation));
+        setSavedMeditations(mList);
+      });
+
       setIsLoaded(true);
-    }
-  }, [userKey, authLoading, authUser]);
+      return () => {
+        unsubProfile();
+        unsubQuests();
+        unsubProjects();
+        unsubMeds();
+      };
+    } else {
+      // Guest: Use localStorage
+      try {
+        const savedProfile = localStorage.getItem(`userProfile_guest`);
+        const savedQuests = localStorage.getItem(`userQuests_guest`);
+        const savedProjects = localStorage.getItem(`userProjects_guest`);
+        const savedMeditations = localStorage.getItem(`userMeditations_guest`);
 
-  // Save data to localStorage
-  const saveData = useCallback((key: string, data: any) => {
-      if (isLoaded) {
-          try {
-              localStorage.setItem(`${key}_${userKey}`, JSON.stringify(data));
-          } catch (error) {
-              if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-                  console.warn("Storage quota exceeded. Clearing older meditations to make room.");
-                  if (key === 'userMeditations') {
-                      // If it's meditations failing, we try to save only the most recent one
-                      const truncated = data.slice(0, 1);
-                      localStorage.setItem(`${key}_${userKey}`, JSON.stringify(truncated));
-                  }
-              } else {
-                console.error("Failed to save data to localStorage", error);
-              }
-          }
+        if (savedProfile) setProfile(JSON.parse(savedProfile));
+        if (savedQuests) setQuests(JSON.parse(savedQuests));
+        if (savedProjects) setProjects(JSON.parse(savedProjects));
+        if (savedMeditations) setSavedMeditations(JSON.parse(savedMeditations));
+      } catch (e) {
+        console.error("Guest storage load failed", e);
+      } finally {
+        setIsLoaded(true);
       }
-  }, [isLoaded, userKey]);
+    }
+  }, [authUser, authLoading]);
 
+  // Fallback for Guest Data Persistence
   useEffect(() => {
-    saveData('userProfile', profile);
-  }, [profile, saveData]);
-
-  useEffect(() => {
-    saveData('userQuests', quests);
-  }, [quests, saveData]);
-
-  useEffect(() => {
-    saveData('userProjects', projects);
-  }, [projects, saveData]);
-
-  useEffect(() => {
-    saveData('userMeditations', savedMeditations);
-  }, [savedMeditations, saveData]);
+    if (isLoaded && !authUser) {
+      localStorage.setItem('userProfile_guest', JSON.stringify(profile));
+      localStorage.setItem('userQuests_guest', JSON.stringify(quests));
+      localStorage.setItem('userProjects_guest', JSON.stringify(projects));
+      localStorage.setItem('userMeditations_guest', JSON.stringify(savedMeditations));
+    }
+  }, [profile, quests, projects, savedMeditations, isLoaded, authUser]);
 
 
   // Recalculate streaks and update profile state when quests change
@@ -186,39 +195,47 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   }, [quests, isLoaded]);
 
 
-  const addQuest = (questData: Omit<Quest, 'id' | 'isCompleted' | 'completedAt'>) => {
+  const addQuest = async (questData: Omit<Quest, 'id' | 'isCompleted' | 'completedAt'>) => {
+    const id = `q-${Date.now()}-${Math.random()}`;
     const newQuest: Quest = {
       ...questData,
-      id: `q-${Date.now()}-${Math.random()}`,
+      id,
       isCompleted: false,
       createdAt: Date.now(),
     };
-    setQuests(prevQuests => [...prevQuests, newQuest]);
+
+    if (authUser) {
+      await setDoc(doc(db, 'users', authUser.uid, 'quests', id), newQuest);
+    } else {
+      setQuests(prevQuests => [...prevQuests, newQuest]);
+    }
     toast({ title: "Quest Added!", description: "A new quest has been added to your board." });
   };
 
-  const editQuest = (updatedQuest: Quest) => {
-    setQuests(prevQuests => prevQuests.map(q => q.id === updatedQuest.id ? updatedQuest : q));
+  const editQuest = async (updatedQuest: Quest) => {
+    if (authUser) {
+      await setDoc(doc(db, 'users', authUser.uid, 'quests', updatedQuest.id), updatedQuest);
+    } else {
+      setQuests(prevQuests => prevQuests.map(q => q.id === updatedQuest.id ? updatedQuest : q));
+    }
     toast({ title: "Quest Updated!", description: "Your quest has been successfully updated." });
   };
   
-  const deleteQuest = (questId: string) => {
-    setQuests(prevQuests => prevQuests.filter(q => q.id !== questId));
+  const deleteQuest = async (questId: string) => {
+    if (authUser) {
+      await deleteDoc(doc(db, 'users', authUser.uid, 'quests', questId));
+    } else {
+      setQuests(prevQuests => prevQuests.filter(q => q.id !== questId));
+    }
     toast({ title: "Quest Deleted", description: "The quest has been removed from your board."});
   };
 
-  const completeQuest = (questId: string) => {
+  const completeQuest = async (questId: string) => {
     const quest = quests.find(q => q.id === questId);
     if (!quest) return;
 
-    // Toggle completion status
     const isNowCompleted = !quest.isCompleted;
-
-    setQuests(prevQuests => 
-        prevQuests.map(q => 
-            q.id === questId ? { ...q, isCompleted: isNowCompleted, completedAt: isNowCompleted ? Date.now() : undefined } : q
-        )
-    );
+    const completedAt = isNowCompleted ? Date.now() : undefined;
 
     // Adaptive XP Calculation
     const daysOld = Math.floor((Date.now() - quest.createdAt) / (1000 * 60 * 60 * 24));
@@ -227,125 +244,130 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     
     let leveledUp = false;
     let newLevelCache = profile.level;
+    let updatedProfile = { ...profile };
 
-    setProfile(p => {
-        let newXp = p.xp + xpChange;
-        if (newXp < 0) newXp = 0;
+    let newXp = profile.xp + xpChange;
+    if (newXp < 0) newXp = 0;
 
-        if (isNowCompleted && newXp >= p.xpToNextLevel) {
-            newLevelCache = p.level + 1;
-            leveledUp = true;
-            return {
-                ...p,
-                level: newLevelCache,
-                xp: newXp - p.xpToNextLevel,
-                xpToNextLevel: Math.floor(p.xpToNextLevel * 1.5),
-            };
-        }
-        return { ...p, xp: newXp };
-    });
+    if (isNowCompleted && newXp >= profile.xpToNextLevel) {
+        newLevelCache = profile.level + 1;
+        leveledUp = true;
+        updatedProfile = {
+            ...profile,
+            level: newLevelCache,
+            xp: newXp - profile.xpToNextLevel,
+            xpToNextLevel: Math.floor(profile.xpToNextLevel * 1.5),
+        };
+    } else {
+        updatedProfile = { ...profile, xp: newXp };
+    }
+
+    if (authUser) {
+        const batch = writeBatch(db);
+        batch.set(doc(db, 'users', authUser.uid, 'quests', questId), { ...quest, isCompleted: isNowCompleted, completedAt });
+        batch.set(doc(db, 'users', authUser.uid), updatedProfile);
+        await batch.commit();
+    } else {
+        setQuests(prevQuests => prevQuests.map(q => q.id === questId ? { ...q, isCompleted: isNowCompleted, completedAt } : q));
+        setProfile(updatedProfile);
+    }
     
-    // Call toasts after state updates
     if (isNowCompleted) {
         if (leveledUp) {
-            toast({
-                title: `Level Up!`,
-                description: `Congratulations! You've reached Level ${newLevelCache}.`,
-            });
+            toast({ title: `Level Up!`, description: `Congratulations! You've reached Level ${newLevelCache}.` });
         } else {
             const bonusMsg = daysOld >= 3 ? " (includes 50% Anti-Procrastination bonus!)" : "";
-            toast({
-                title: "Quest Complete!",
-                description: `You earned ${finalXP} XP!${bonusMsg}`,
-            });
+            toast({ title: "Quest Complete!", description: `You earned ${finalXP} XP!${bonusMsg}` });
         }
     } else {
-        toast({
-            title: "Quest Undone",
-            description: `Re-added "${quest.title}" to your board.`,
-            variant: "default"
-        });
+        toast({ title: "Quest Undone", description: `Re-added "${quest.title}" to your board.` });
     }
   };
 
-  const addProject = (projectData: Omit<Project, 'id' | 'tasks'>) => {
+  const addProject = async (projectData: Omit<Project, 'id' | 'tasks'>) => {
+    const id = `p-${Date.now()}-${Math.random()}`;
     const newProject: Project = {
       ...projectData,
-      id: `p-${Date.now()}-${Math.random()}`,
+      id,
       tasks: [],
     };
-    setProjects(prevProjects => [...prevProjects, newProject]);
+    if (authUser) {
+      await setDoc(doc(db, 'users', authUser.uid, 'projects', id), newProject);
+    } else {
+      setProjects(prevProjects => [...prevProjects, newProject]);
+    }
   };
   
-  const toggleProjectTask = (projectId: string, taskId: string) => {
-    setProjects(prevProjects =>
-      prevProjects.map(p =>
-        p.id === projectId
-          ? {
-              ...p,
-              tasks: p.tasks.map(t =>
-                t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t
-              ),
-            }
-          : p
-      )
-    );
+  const toggleProjectTask = async (projectId: string, taskId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+    const updatedTasks = project.tasks.map(t => t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t);
+    const updatedProject = { ...project, tasks: updatedTasks };
+
+    if (authUser) {
+      await setDoc(doc(db, 'users', authUser.uid, 'projects', projectId), updatedProject);
+    } else {
+      setProjects(prevProjects => prevProjects.map(p => p.id === projectId ? updatedProject : p));
+    }
   };
 
-   const addProjectTask = (projectId: string, taskText: string) => {
+   const addProjectTask = async (projectId: string, taskText: string) => {
     if (!taskText.trim()) return;
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
 
     const newTask: ProjectTask = {
       id: `t-${Date.now()}-${Math.random()}`,
       text: taskText,
       isCompleted: false,
     };
+    const updatedProject = { ...project, tasks: [...project.tasks, newTask] };
 
-    setProjects(prevProjects =>
-      prevProjects.map(p =>
-        p.id === projectId
-          ? {
-              ...p,
-              tasks: [...p.tasks, newTask],
-            }
-          : p
-      )
-    );
+    if (authUser) {
+      await setDoc(doc(db, 'users', authUser.uid, 'projects', projectId), updatedProject);
+    } else {
+      setProjects(prevProjects => prevProjects.map(p => p.id === projectId ? updatedProject : p));
+    }
   };
 
-  const deleteProjectTask = (projectId: string, taskId: string) => {
-      setProjects(prevProjects =>
-        prevProjects.map(p =>
-            p.id === projectId
-            ? {
-                ...p,
-                tasks: p.tasks.filter(t => t.id !== taskId),
-                }
-            : p
-        )
-    );
+  const deleteProjectTask = async (projectId: string, taskId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+    const updatedProject = { ...project, tasks: project.tasks.filter(t => t.id !== taskId) };
+
+    if (authUser) {
+      await setDoc(doc(db, 'users', authUser.uid, 'projects', projectId), updatedProject);
+    } else {
+      setProjects(prevProjects => prevProjects.map(p => p.id === projectId ? updatedProject : p));
+    }
     toast({ title: "Task Deleted", description: "The task has been removed from the project." });
   }
 
-  const updateProfileCustomization = (title: string, avatarUrl: string) => {
-    setProfile(prevProfile => ({
-      ...prevProfile,
-      title,
-      avatarUrl,
-    }));
+  const updateProfileCustomization = async (title: string, avatarUrl: string) => {
+    const updatedProfile = { ...profile, title, avatarUrl };
+    if (authUser) {
+      await setDoc(doc(db, 'users', authUser.uid), updatedProfile);
+    } else {
+      setProfile(updatedProfile);
+    }
   };
 
-  const addSavedMeditation = (meditationData: { prompt: string; script: string; audioDataUri: string }) => {
+  const addSavedMeditation = async (meditationData: { prompt: string; script: string; audioDataUri: string }) => {
+    const id = `m-${Date.now()}`;
     const newMeditation: SavedMeditation = {
       ...meditationData,
-      id: `m-${Date.now()}`,
+      id,
       createdAt: Date.now(),
     };
-    setSavedMeditations(prev => {
-        const updated = [newMeditation, ...prev];
-        // Keep library small to avoid localStorage quota issues with large audio base64 strings
-        return updated.slice(0, 3);
-    });
+    
+    if (authUser) {
+      await setDoc(doc(db, 'users', authUser.uid, 'meditations', id), newMeditation);
+    } else {
+      setSavedMeditations(prev => {
+          const updated = [newMeditation, ...prev];
+          return updated.slice(0, 3);
+      });
+    }
   };
 
   if (!isLoaded || authLoading) {

@@ -3,6 +3,7 @@
 
 import { initializeApp, getApps, getApp, FirebaseOptions } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
 
 // This is a mock config. In a real application, you would use your own
@@ -19,6 +20,7 @@ const firebaseConfig: FirebaseOptions = {
 // Initialize Firebase for SSR
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
+const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
-export { app, auth, googleProvider };
+export { app, auth, db, googleProvider };

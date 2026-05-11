@@ -19,8 +19,15 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "LifeQuest",
+  title: "LifeQuest | OS for the Self",
   description: "Gamified Productivity & Balance for a High-Performer",
+  manifest: "/manifest.json",
+  themeColor: "#09090b",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "LifeQuest",
+  },
 };
 
 export default function RootLayout({
