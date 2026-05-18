@@ -82,7 +82,7 @@ const getWeatherTool = ai.defineTool(
 
 const prompt = ai.definePrompt({
   name: 'generateQuestsPrompt',
-  model: googleAI.model('gemini-2.5-pro'),
+  model: googleAI.model('gemini-2.5-flash'),
   input: { schema: GenerateQuestsInputSchema },
   output: { schema: GenerateQuestsOutputSchema },
   tools: [getWeatherTool],
