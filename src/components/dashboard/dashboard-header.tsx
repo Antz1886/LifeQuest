@@ -47,7 +47,6 @@ function DashboardHeader() {
     const WeatherIcon = weather ? (weatherIcons[weather] || <Cloud className="w-8 h-8 text-gray-400" />) : <Cloud className="w-8 h-8 text-gray-400" />;
 
     return (
-    return (
         <Card className="border-none bg-transparent shadow-none md:border md:bg-card md:shadow-sm">
             <CardContent className="p-2 md:p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                  <div className="flex items-center gap-3 w-full md:w-auto">
