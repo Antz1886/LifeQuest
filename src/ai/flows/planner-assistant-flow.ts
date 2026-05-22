@@ -42,7 +42,7 @@ export async function askPlannerAssistant(input: PlannerAssistantInput): Promise
 
 const plannerPrompt = ai.definePrompt({
   name: 'plannerAssistantPrompt',
-  model: googleAI.model('gemini-2.0-flash'),
+  model: googleAI.model('gemini-2.5-flash'),
   input: { schema: PlannerAssistantInputSchema },
   output: { schema: PlannerAssistantOutputSchema },
   prompt: `You are LifeQuest AI, a premium gamified personal productivity assistant and planner. Your goal is to help the user achieve their goals and manage their calendar effectively.
