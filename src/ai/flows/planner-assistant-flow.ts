@@ -22,7 +22,22 @@ export type PlannerAssistantInput = z.infer<typeof PlannerAssistantInputSchema>;
 export type PlannerAssistantOutput = z.infer<typeof PlannerAssistantOutputSchema>;
 
 export async function askPlannerAssistant(input: PlannerAssistantInput): Promise<PlannerAssistantOutput> {
-  return plannerAssistantFlow(input);
+  try {
+    return await plannerAssistantFlow(input);
+  } catch (error: any) {
+    console.error("Error in askPlannerAssistant flow:", error);
+    let errorMsg = "Unable to connect with AI assistant.";
+    if (error?.message?.includes("429") || error?.message?.toLowerCase().includes("quota")) {
+      errorMsg = "Google AI Studio API Key quota limit exceeded (429 Too Many Requests). Please check your AI Studio plan/billing, daily limits, or try again later.";
+    } else if (error?.message?.includes("403")) {
+      errorMsg = "Google AI Studio API Key is invalid or restricted (403 Forbidden).";
+    } else if (error?.message) {
+      errorMsg = `Google AI Studio Error: ${error.message}`;
+    }
+    return {
+      response: `⚠️ **Planner Assistant Error**\n\n${errorMsg}`
+    };
+  }
 }
 
 const plannerPrompt = ai.definePrompt({
