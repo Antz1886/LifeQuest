@@ -8,7 +8,7 @@
  * - GenerateMeditationOutput - The return type for the generateMeditation function.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, callWithRetry } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
 import wav from 'wav';
@@ -78,14 +78,14 @@ const generateMeditationFlow = ai.defineFlow(
   },
   async (input) => {
     // 1. Generate the meditation script
-    const scriptResponse = await scriptGenerationPrompt(input);
+    const scriptResponse = await callWithRetry(() => scriptGenerationPrompt(input));
     const script = scriptResponse.output?.script;
     if (!script) {
         throw new Error("Failed to generate meditation script from AI model.");
     }
     
     // 2. Convert the script to audio
-    const ttsResponse = await ai.generate({
+    const ttsResponse = await callWithRetry(() => ai.generate({
         model: googleAI.model('gemini-2.5-flash'),
         config: {
           responseModalities: ['AUDIO'],
@@ -96,7 +96,7 @@ const generateMeditationFlow = ai.defineFlow(
           },
         },
         prompt: script,
-      });
+      }));
 
     const audioMedia = ttsResponse.media;
     if (!audioMedia) {

@@ -8,7 +8,7 @@
  * - GenerateQuestsOutput - The return type for the generateQuests function.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, callWithRetry } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
 import { QuestCategory, Project } from '@/lib/types';
@@ -147,7 +147,7 @@ const generateQuestsFlow = ai.defineFlow(
     outputSchema: GenerateQuestsOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    const { output } = await callWithRetry(() => prompt(input));
     return output!;
   }
 );

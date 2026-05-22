@@ -8,7 +8,7 @@
  * - GenerateProfileCustomizationOutput - The return type for the function.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, callWithRetry } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
 import { QuestCategory, Quest, UserProfile } from '@/lib/types';
@@ -86,7 +86,7 @@ const generateProfileCustomizationFlow = ai.defineFlow(
   },
   async (input) => {
     // 1. Generate the title
-    const titleResponse = await titleGenerationPrompt(input);
+    const titleResponse = await callWithRetry(() => titleGenerationPrompt(input));
     const title = titleResponse.output?.title;
     if (!title) {
         throw new Error("Failed to generate a title.");
@@ -96,13 +96,13 @@ const generateProfileCustomizationFlow = ai.defineFlow(
     // Construct a simple, direct prompt for the image generation model.
     const simpleAvatarPrompt = `Fantasy-style character bust, profile picture for a productivity app. Title: "${title}". ${input.avatarPrompt || ''}. Modern, vibrant, inspiring, dark, epic theme. Centered. Epic lighting.`;
 
-    const { media } = await ai.generate({
+    const { media } = await callWithRetry(() => ai.generate({
       model: googleAI.model('imagen-3.0-generate-002'),
       prompt: simpleAvatarPrompt,
       config: {
         responseModalities: ['IMAGE'],
       },
-    });
+    }));
 
     const avatarDataUri = media?.url;
     if (!avatarDataUri) {

@@ -3,7 +3,7 @@
  * @fileOverview Genkit AI flow for the Planner Assistant.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, callWithRetry } from '@/ai/genkit';
 import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
 
@@ -89,7 +89,7 @@ const plannerAssistantFlow = ai.defineFlow(
     outputSchema: PlannerAssistantOutputSchema,
   },
   async (input) => {
-    const { output } = await plannerPrompt(input);
+    const { output } = await callWithRetry(() => plannerPrompt(input));
     return output!;
   }
 );
