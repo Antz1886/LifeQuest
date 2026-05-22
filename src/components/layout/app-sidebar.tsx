@@ -10,7 +10,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarTrigger
+  SidebarTrigger,
+  SidebarProvider
 } from "@/components/ui/sidebar";
 import {
   Flame,

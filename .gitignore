@@ -49,3 +49,6 @@ studio.json
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# local agent scratch
+/scratch/

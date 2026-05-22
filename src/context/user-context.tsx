@@ -23,11 +23,12 @@ import {
 
 // Helper function to calculate streaks
 const calculateStreaks = (completedQuests: Quest[]) => {
-    const streaks = { gym: 0, meditation: 0, code: 0 };
+    const streaks = { personal: 0, work: 0, freelancing: 0, mindBody: 0 };
     const categoryMap: { [key in QuestCategory]?: keyof typeof streaks } = {
-        'Strength': 'gym',
-        'Mind': 'meditation',
-        'Code': 'code'
+        'Personal': 'personal',
+        'Work': 'work',
+        'Freelancing': 'freelancing',
+        'Mind & Body': 'mindBody'
     };
 
     const sortedQuests = completedQuests
@@ -61,9 +62,10 @@ const calculateStreaks = (completedQuests: Quest[]) => {
         return streak;
     }
 
-    streaks.gym = calculateStreakForCategory('gym');
-    streaks.meditation = calculateStreakForCategory('meditation');
-    streaks.code = calculateStreakForCategory('code');
+    streaks.personal = calculateStreakForCategory('personal');
+    streaks.work = calculateStreakForCategory('work');
+    streaks.freelancing = calculateStreakForCategory('freelancing');
+    streaks.mindBody = calculateStreakForCategory('mindBody');
 
     return streaks;
 };
@@ -75,7 +77,7 @@ interface UserContextType {
   projects: Project[];
   savedMeditations: SavedMeditation[];
   setQuests: (quests: Quest[]) => void;
-  addQuest: (questData: Omit<Quest, 'id' | 'isCompleted' | 'completedAt'>) => void;
+  addQuest: (questData: Omit<Quest, 'id' | 'isCompleted' | 'completedAt' | 'createdAt'>) => void;
   editQuest: (updatedQuest: Quest) => void;
   deleteQuest: (questId: string) => void;
   completeQuest: (questId: string) => void;
@@ -214,7 +216,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   }, [quests, isLoaded]);
 
 
-  const addQuest = async (questData: Omit<Quest, 'id' | 'isCompleted' | 'completedAt'>) => {
+  const addQuest = async (questData: Omit<Quest, 'id' | 'isCompleted' | 'completedAt' | 'createdAt'>) => {
     const id = `q-${Date.now()}-${Math.random()}`;
     const newQuest: Quest = {
       ...questData,

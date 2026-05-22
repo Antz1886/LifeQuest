@@ -13,7 +13,7 @@ import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'genkit';
 import { QuestCategory, Quest, UserProfile } from '@/lib/types';
 
-const QuestCategorySchema = z.enum(["Mind", "Strength", "Code", "Wisdom", "Legacy"]);
+const QuestCategorySchema = z.enum(["Personal", "Work", "Freelancing", "Mind & Body"]);
 
 const QuestSchema = z.object({
   id: z.string(),
@@ -30,9 +30,10 @@ const UserProfileSchema = z.object({
     xp: z.number(),
     xpToNextLevel: z.number(),
     streaks: z.object({
-        gym: z.number(),
-        meditation: z.number(),
-        code: z.number(),
+        personal: z.number(),
+        work: z.number(),
+        freelancing: z.number(),
+        mindBody: z.number(),
     })
 });
 
@@ -56,7 +57,7 @@ export async function generateProfileCustomization(input: GenerateProfileCustomi
 
 const titleGenerationPrompt = ai.definePrompt({
     name: 'generateProfileTitlePrompt',
-    model: googleAI.model('gemini-2.5-flash'),
+    model: googleAI.model('gemini-2.0-flash'),
     input: { schema: GenerateProfileCustomizationInputSchema },
     output: { schema: z.object({ title: z.string() }) },
     prompt: `You are a creative assistant for a gamified productivity app. Your task is to generate a cool, inspiring title for a user based on their profile and recently completed quests.
@@ -64,7 +65,7 @@ const titleGenerationPrompt = ai.definePrompt({
 User Profile:
 - Name: {{{profile.name}}}
 - Level: {{{profile.level}}}
-- Streaks: Code ({{{profile.streaks.code}}} days), Gym ({{{profile.streaks.gym}}} days), Meditation ({{{profile.streaks.meditation}}} days)
+- Streaks: Personal ({{{profile.streaks.personal}}} days), Work ({{{profile.streaks.work}}} days), Freelancing ({{{profile.streaks.freelancing}}} days), Mind & Body ({{{profile.streaks.mindBody}}} days)
 
 Recently Completed Quests:
 {{#each completedQuests}}
@@ -96,14 +97,14 @@ const generateProfileCustomizationFlow = ai.defineFlow(
     const simpleAvatarPrompt = `Fantasy-style character bust, profile picture for a productivity app. Title: "${title}". ${input.avatarPrompt || ''}. Modern, vibrant, inspiring, dark, epic theme. Centered. Epic lighting.`;
 
     const { media } = await ai.generate({
-      model: 'googleai/gemini-2.0-flash-preview-image-generation',
+      model: googleAI.model('imagen-3.0-generate-002'),
       prompt: simpleAvatarPrompt,
       config: {
-        responseModalities: ['IMAGE', 'TEXT'],
+        responseModalities: ['IMAGE'],
       },
     });
 
-    const avatarDataUri = media.url;
+    const avatarDataUri = media?.url;
     if (!avatarDataUri) {
         throw new Error("Failed to generate avatar image.");
     }

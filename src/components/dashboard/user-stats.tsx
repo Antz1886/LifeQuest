@@ -10,7 +10,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Flame, Dumbbell, Code, BrainCircuit } from 'lucide-react';
+import { Flame, Dumbbell, Heart, Briefcase, Laptop } from 'lucide-react';
 
 export function UserStats() {
   const { profile } = useUser();
@@ -38,26 +38,33 @@ export function UserStats() {
           </div>
           <Progress value={xpPercentage} className="h-3 [&>div]:bg-accent" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-          <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
-            <Dumbbell className="w-8 h-8 text-primary"/>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
+          <div className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border/50 shadow-sm">
+            <Heart className="w-8 h-8 text-purple-400 shrink-0"/>
             <div>
-              <p className="font-bold text-lg">{profile.streaks.gym} Days</p>
-              <p className="text-sm text-muted-foreground">Gym Streak</p>
+              <p className="font-bold text-lg">{profile.streaks.personal} Days</p>
+              <p className="text-xs text-muted-foreground">Personal</p>
             </div>
           </div>
-           <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
-            <Code className="w-8 h-8 text-primary"/>
+          <div className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border/50 shadow-sm">
+            <Briefcase className="w-8 h-8 text-blue-400 shrink-0"/>
             <div>
-              <p className="font-bold text-lg">{profile.streaks.code} Days</p>
-              <p className="text-sm text-muted-foreground">Code Streak</p>
+              <p className="font-bold text-lg">{profile.streaks.work} Days</p>
+              <p className="text-xs text-muted-foreground">Work</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
-            <BrainCircuit className="w-8 h-8 text-primary"/>
+          <div className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border/50 shadow-sm">
+            <Laptop className="w-8 h-8 text-green-400 shrink-0"/>
             <div>
-              <p className="font-bold text-lg">{profile.streaks.meditation} Days</p>
-              <p className="text-sm text-muted-foreground">Mindful Streak</p>
+              <p className="font-bold text-lg">{profile.streaks.freelancing} Days</p>
+              <p className="text-xs text-muted-foreground">Freelance</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border/50 shadow-sm">
+            <Dumbbell className="w-8 h-8 text-orange-400 shrink-0"/>
+            <div>
+              <p className="font-bold text-lg">{profile.streaks.mindBody} Days</p>
+              <p className="text-xs text-muted-foreground">Mind & Body</p>
             </div>
           </div>
         </div>

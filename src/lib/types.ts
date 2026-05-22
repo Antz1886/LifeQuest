@@ -1,4 +1,4 @@
-export type QuestCategory = "Mind" | "Strength" | "Code" | "Wisdom" | "Legacy";
+export type QuestCategory = "Personal" | "Work" | "Freelancing" | "Mind & Body";
 export type EnergyLevel = "Low" | "Medium" | "High";
 
 export type Priority = 1 | 2 | 3 | 4; // 1: Urgent/Important, 2: Important, 3: Urgent, 4: Backlog
@@ -25,9 +25,10 @@ export interface UserProfile {
   xp: number;
   xpToNextLevel: number;
   streaks: {
-    gym: number;
-    meditation: number;
-    code: number;
+    personal: number;
+    work: number;
+    freelancing: number;
+    mindBody: number;
   }
   title?: string;
   avatarUrl?: string;

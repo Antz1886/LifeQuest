@@ -28,7 +28,9 @@ import {
   History,
   Layout,
   FileText,
-  AlertTriangle
+  AlertTriangle,
+  Heart,
+  Laptop
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -47,19 +49,17 @@ import { isToday, isTomorrow, addDays } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 
 const categoryIcons: Record<QuestCategory, React.ReactNode> = {
-  Mind: <BrainCircuit className="w-5 h-5" />,
-  Strength: <Dumbbell className="w-5 h-5" />,
-  Code: <Code className="w-5 h-5" />,
-  Wisdom: <BookOpen className="w-5 h-5" />,
-  Legacy: <Briefcase className="w-5 h-5" />,
+  Personal: <Heart className="w-5 h-5" />,
+  Work: <Briefcase className="w-5 h-5" />,
+  Freelancing: <Laptop className="w-5 h-5" />,
+  "Mind & Body": <Dumbbell className="w-5 h-5" />,
 };
 
 const categoryColors: Record<QuestCategory, string> = {
-  Mind: "text-chart-1 border-chart-1/50",
-  Strength: "text-chart-2 border-chart-2/50",
-  Code: "text-chart-3 border-chart-3/50",
-  Wisdom: "text-chart-4 border-chart-4/50",
-  Legacy: "text-chart-5 border-chart-5/50",
+  Personal: "text-purple-400 border-purple-400/50",
+  Work: "text-blue-400 border-blue-400/50",
+  Freelancing: "text-green-400 border-green-400/50",
+  "Mind & Body": "text-orange-400 border-orange-400/50",
 };
 
 const energyColors = {
@@ -109,10 +109,14 @@ function QuestItem({ quest }: { quest: Quest }) {
                 </Badge>
             )}
             {quest.notes && (
-                <FileText className="w-3 h-3 text-muted-foreground shrink-0" title="Has notes" />
+                <span title="Has notes">
+                    <FileText className="w-3 h-3 text-muted-foreground shrink-0" />
+                </span>
             )}
             {quest.priority === 1 && (
-                <AlertTriangle className="w-3 h-3 text-red-500 shrink-0" title="Urgent & Important" />
+                <span title="Urgent & Important">
+                    <AlertTriangle className="w-3 h-3 text-red-500 shrink-0" />
+                </span>
             )}
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mt-1">
@@ -240,12 +244,12 @@ function StrategicView({ quests }: { quests: Quest[] }) {
 }
 
 function QuestCategoryTabs({ quests }: { quests: Quest[] }) {
-    const categories: QuestCategory[] = ["Mind", "Strength", "Code", "Wisdom", "Legacy"];
+    const categories: QuestCategory[] = ["Personal", "Work", "Freelancing", "Mind & Body"];
     return (
          <Tabs defaultValue="All" className="w-full">
           <div className="md:hidden">
             <ScrollArea className="w-full whitespace-nowrap rounded-md">
-              <TabsList className="grid w-max grid-cols-7">
+              <TabsList className="grid w-max grid-cols-6">
                 <TabsTrigger value="All">All</TabsTrigger>
                 <TabsTrigger value="Strategic" className="gap-1"><Layout className="w-3 h-3"/>Strategic</TabsTrigger>
                 {categories.map((cat) => (
@@ -257,7 +261,7 @@ function QuestCategoryTabs({ quests }: { quests: Quest[] }) {
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
           </div>
-          <TabsList className="hidden md:grid w-full grid-cols-7">
+          <TabsList className="hidden md:grid w-full grid-cols-6">
             <TabsTrigger value="All">All</TabsTrigger>
             <TabsTrigger value="Strategic" className="gap-1"><Layout className="w-3 h-3"/>Strategic</TabsTrigger>
             {categories.map((cat) => (

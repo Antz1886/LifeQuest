@@ -29,7 +29,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useUser } from '@/context/user-context';
-import { Quest, QuestCategory } from '@/lib/types';
+import { Quest, QuestCategory, Priority } from '@/lib/types';
 import { PlusCircle, Edit, CalendarIcon } from 'lucide-react';
 import { format, formatISO } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -37,7 +37,7 @@ import { ScrollArea } from '../ui/scroll-area';
 
 const questSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters long."),
-  category: z.enum(["Mind", "Strength", "Code", "Wisdom", "Legacy"]),
+  category: z.enum(["Personal", "Work", "Freelancing", "Mind & Body"]),
   xp: z.coerce.number().min(10, "XP must be at least 10.").max(200, "XP cannot exceed 200."),
   time: z.string().min(1, "Time is required."),
   date: z.date({ required_error: "A date is required." }),
@@ -74,7 +74,7 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
     resolver: zodResolver(questSchema),
     defaultValues: {
       title: quest?.title || '',
-      category: quest?.category || 'Mind',
+      category: quest?.category || 'Personal',
       xp: quest?.xp || 50,
       time: quest?.time || '09:00 AM',
       date: quest ? new Date(quest.date) : new Date(),
@@ -99,7 +99,7 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
         notes: quest.notes || '',
       } : {
         title: '',
-        category: 'Mind',
+        category: 'Personal',
         xp: 50,
         time: '09:00 AM',
         date: new Date(),
@@ -115,6 +115,7 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
   const onSubmit = (data: QuestFormData) => {
     const questData = {
         ...data,
+        priority: data.priority as Priority,
         date: formatISO(data.date, { representation: 'date' }),
         projectId: data.projectId === 'none' ? undefined : data.projectId,
     };
@@ -160,7 +161,7 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {(['Mind', 'Strength', 'Code', 'Wisdom', 'Legacy'] as QuestCategory[]).map(cat => (
+                    {(['Personal', 'Work', 'Freelancing', 'Mind & Body'] as QuestCategory[]).map(cat => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                   </SelectContent>

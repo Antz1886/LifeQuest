@@ -94,7 +94,14 @@ export function GenerateQuestsDialog() {
                 activeProjects: activeProjects,
                 calendarEvents: syncedEvents,
              });
-            setQuests(quests);
+
+            const formattedQuests = quests.map(q => ({
+                ...q,
+                date: new Date().toISOString().split('T')[0],
+                createdAt: Date.now(),
+                priority: 2 as const,
+            }));
+            setQuests(formattedQuests);
             toast({
                 title: "Quests Generated!",
                 description: "Your new quests (including calendar events) are ready.",

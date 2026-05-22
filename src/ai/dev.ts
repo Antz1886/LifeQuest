@@ -3,3 +3,4 @@ import './genkit';
 import './flows/generate-quests-flow';
 import './flows/generate-meditation-flow';
 import './flows/generate-profile-customization-flow';
+import './flows/planner-assistant-flow';

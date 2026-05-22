@@ -14,7 +14,7 @@ import { z } from 'genkit';
 import { QuestCategory, Project } from '@/lib/types';
 import { getCurrentWeather } from '@/services/weather';
 
-const QuestCategorySchema = z.enum(["Mind", "Strength", "Code", "Wisdom", "Legacy"]);
+const QuestCategorySchema = z.enum(["Personal", "Work", "Freelancing", "Mind & Body"]);
 
 const EnergyLevelSchema = z.enum(["Low", "Medium", "High"]);
 
@@ -82,18 +82,17 @@ const getWeatherTool = ai.defineTool(
 
 const prompt = ai.definePrompt({
   name: 'generateQuestsPrompt',
-  model: googleAI.model('gemini-2.5-flash'),
+  model: googleAI.model('gemini-2.0-flash'),
   input: { schema: GenerateQuestsInputSchema },
   output: { schema: GenerateQuestsOutputSchema },
   tools: [getWeatherTool],
   prompt: `You are a productivity assistant for a gamified life app. Your task is to transform a user's daily goals into a list of actionable "quests".
 
 Quest Categories:
-- Mind: Meditation, family time, relaxation.
-- Strength: Gym, physical activities.
-- Code: Programming, studying tech.
-- Wisdom: Reading, learning new non-tech skills.
-- Legacy: Career tasks, business development, networking.
+- Personal: Family time, self-care, chores, hobbies, social events.
+- Work: NOC Manager duties, professional tasks, jobs, corporate studies.
+- Freelancing: Consulting, side-businesses, client work, custom project builds.
+- Mind & Body: Meditation, gym sessions, sports, physical and mental workouts.
 
 Based on the user's goals and active projects below, create a list of 5-7 quests. Each quest should be specific, actionable, and aligned with one of the categories. Assign appropriate XP based on the quest's difficulty and duration. All quests should be generated with 'isCompleted' set to false.
 
@@ -103,7 +102,7 @@ For each quest:
 
 If the user's goals are vague or unstated, create a balanced set of starter quests across different categories, drawing inspiration from their active projects if available.
 
-If 'calendarEvents' are provided, prioritize turning them into actionable quests. For example, a business meeting should be a 'Legacy' quest, a doctor's appointment a 'Mind' or 'Strength' quest, and a study group a 'Wisdom' quest.
+If 'calendarEvents' are provided, prioritize turning them into actionable quests. For example, a business meeting should be a 'Work' or 'Freelancing' quest, a doctor's appointment a 'Mind & Body' or 'Personal' quest, and a study group a 'Work' or 'Personal' quest.
 
 IMPORTANT: To suggest weather-appropriate activities, you MUST call the 'getCurrentWeather' tool with the user's location, which is provided in the 'location' input field. Do not guess the weather.
 

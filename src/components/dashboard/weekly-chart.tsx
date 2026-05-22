@@ -8,11 +8,10 @@ import { subDays, format, isSameDay, startOfDay } from "date-fns";
 import type { Quest, QuestCategory } from "@/lib/types";
 
 const categoryColors: Record<QuestCategory, string> = {
-  Mind: "hsl(var(--chart-1))",
-  Strength: "hsl(var(--chart-2))",
-  Code: "hsl(var(--chart-3))",
-  Wisdom: "hsl(var(--chart-4))",
-  Legacy: "hsl(var(--chart-5))",
+  Personal: "#c084fc", // Purple 400
+  Work: "#60a5fa", // Blue 400
+  Freelancing: "#4ade80", // Green 400
+  "Mind & Body": "#fb923c", // Orange 400
 };
 
 
@@ -30,11 +29,10 @@ export function WeeklyChart() {
       
       data.push({
         name: dayName,
-        Mind: 0,
-        Strength: 0,
-        Code: 0,
-        Wisdom: 0,
-        Legacy: 0,
+        Personal: 0,
+        Work: 0,
+        Freelancing: 0,
+        "Mind & Body": 0,
         date: date, // Store the date for matching
       });
     }
@@ -71,11 +69,10 @@ export function WeeklyChart() {
             cursor={{ fill: "hsla(var(--muted), 0.5)" }}
           />
           <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
-          <Bar dataKey="Mind" stackId="a" fill={categoryColors.Mind} />
-          <Bar dataKey="Strength" stackId="a" fill={categoryColors.Strength} />
-          <Bar dataKey="Code" stackId="a" fill={categoryColors.Code} />
-          <Bar dataKey="Wisdom" stackId="a" fill={categoryColors.Wisdom} />
-          <Bar dataKey="Legacy" stackId="a" fill={categoryColors.Legacy} />
+          <Bar dataKey="Personal" stackId="a" fill={categoryColors.Personal} />
+          <Bar dataKey="Work" stackId="a" fill={categoryColors.Work} />
+          <Bar dataKey="Freelancing" stackId="a" fill={categoryColors.Freelancing} />
+          <Bar dataKey="Mind & Body" stackId="a" fill={categoryColors["Mind & Body"]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

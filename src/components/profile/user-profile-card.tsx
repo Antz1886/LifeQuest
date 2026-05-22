@@ -32,15 +32,18 @@ export function UserProfileCard() {
                 </div>
                 <div>
                     <h3 className="font-headline text-lg mb-2">Current Streaks</h3>
-                    <div className="flex justify-center gap-4">
-                        <Badge variant="secondary" className="gap-1.5 py-1 px-3 text-base">
-                            <Flame className="w-4 h-4 text-orange-400" /> {profile.streaks.gym} Gym
+                    <div className="flex justify-center gap-3 flex-wrap">
+                        <Badge variant="secondary" className="gap-1.5 py-1 px-2.5 text-sm">
+                            <Flame className="w-4 h-4 text-purple-400" /> {profile.streaks.personal} Personal
                         </Badge>
-                        <Badge variant="secondary" className="gap-1.5 py-1 px-3 text-base">
-                            <Flame className="w-4 h-4 text-blue-400" /> {profile.streaks.code} Code
+                        <Badge variant="secondary" className="gap-1.5 py-1 px-2.5 text-sm">
+                            <Flame className="w-4 h-4 text-blue-400" /> {profile.streaks.work} Work
                         </Badge>
-                        <Badge variant="secondary" className="gap-1.5 py-1 px-3 text-base">
-                             <Flame className="w-4 h-4 text-purple-400" /> {profile.streaks.meditation} Mind
+                        <Badge variant="secondary" className="gap-1.5 py-1 px-2.5 text-sm">
+                            <Flame className="w-4 h-4 text-green-400" /> {profile.streaks.freelancing} Freelance
+                        </Badge>
+                        <Badge variant="secondary" className="gap-1.5 py-1 px-2.5 text-sm">
+                             <Flame className="w-4 h-4 text-orange-400" /> {profile.streaks.mindBody} Mind & Body
                         </Badge>
                     </div>
                 </div>
