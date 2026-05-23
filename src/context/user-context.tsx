@@ -86,6 +86,8 @@ interface UserContextType {
   addProjectTask: (projectId: string, taskText: string) => void;
   deleteProjectTask: (projectId: string, taskId: string) => void;
   updateProfileCustomization: (title: string, avatarUrl: string) => void;
+  updateProfile: (updates: Partial<UserProfile>) => void;
+  resetProgress: () => void;
   addSavedMeditation: (meditationData: { prompt: string; script: string; audioDataUri: string }) => void;
   isLoaded: boolean;
 }
@@ -364,6 +366,19 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     toast({ title: "Task Deleted", description: "The task has been removed from the project." });
   }
 
+  // Dynamic Theme Application
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const root = window.document.documentElement;
+      const themes = ['theme-cyberpunk', 'theme-forest', 'theme-ocean', 'theme-cosmic', 'theme-sunset', 'theme-minimal'];
+      themes.forEach(t => root.classList.remove(t));
+      
+      if (profile?.theme && profile.theme !== 'default') {
+        root.classList.add(`theme-${profile.theme}`);
+      }
+    }
+  }, [profile?.theme]);
+
   const updateProfileCustomization = async (title: string, avatarUrl: string) => {
     const updatedProfile = { ...profile, title, avatarUrl };
     if (authUser) {
@@ -371,6 +386,49 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setProfile(updatedProfile);
     }
+  };
+
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    const updatedProfile = { ...profile, ...updates };
+    if (authUser) {
+      await setDoc(doc(db, 'users', authUser.uid), updatedProfile);
+    } else {
+      setProfile(updatedProfile);
+    }
+  };
+
+  const resetProgress = async () => {
+    const updatedProfile = {
+      ...profile,
+      level: 1,
+      xp: 0,
+      xpToNextLevel: 100,
+      streaks: {
+        personal: 0,
+        work: 0,
+        freelancing: 0,
+        mindBody: 0,
+      },
+      title: "Novice",
+      avatarUrl: "",
+      theme: "default"
+    };
+
+    if (authUser) {
+      const batch = writeBatch(db);
+      batch.set(doc(db, 'users', authUser.uid), updatedProfile);
+      
+      // Delete all quests to reset board history
+      quests.forEach((q) => {
+        batch.delete(doc(db, 'users', authUser.uid, 'quests', q.id));
+      });
+      
+      await batch.commit();
+    } else {
+      setQuests([]);
+      setProfile(updatedProfile);
+    }
+    toast({ title: "Progress Reset", description: "Your level, XP, streaks, and quest history have been reset to zero." });
   };
 
   const addSavedMeditation = async (meditationData: { prompt: string; script: string; audioDataUri: string }) => {
@@ -400,7 +458,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <UserContext.Provider value={{ profile, quests, projects, savedMeditations, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask, deleteProjectTask, updateProfileCustomization, addSavedMeditation, isLoaded }}>
+    <UserContext.Provider value={{ profile, quests, projects, savedMeditations, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask, deleteProjectTask, updateProfileCustomization, updateProfile, resetProgress, addSavedMeditation, isLoaded }}>
       {children}
     </UserContext.Provider>
   );

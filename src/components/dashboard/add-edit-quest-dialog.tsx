@@ -133,8 +133,8 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[480px]">
-        <DialogHeader>
+      <DialogContent className="w-[95%] sm:max-w-[480px] max-h-[90vh] flex flex-col p-5 md:p-6 overflow-hidden">
+        <DialogHeader className="shrink-0 mb-2">
           <DialogTitle className="font-headline text-2xl text-primary flex items-center gap-2">
             {mode === 'add' ? <PlusCircle /> : <Edit />}
             {mode === 'add' ? 'Add New Quest' : 'Edit Quest'}
@@ -143,180 +143,182 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
             {mode === 'add' ? 'Forge a new task for your journey.' : 'Refine the details of your quest.'}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
-          <div>
-            <Label htmlFor="title">Title</Label>
-            <Input id="title" {...register('title')} />
-            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
-          </div>
-
-          <div>
-            <Label htmlFor="category">Category</Label>
-            <Controller
-              name="category"
-              control={control}
-              render={({ field }) => (
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <SelectTrigger id="category">
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(['Personal', 'Work', 'Freelancing', 'Mind & Body'] as QuestCategory[]).map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>}
-          </div>
-            
-          <div>
-            <Label>Date</Label>
-            <Controller
-                name="date"
-                control={control}
-                render={({ field }) => (
-                     <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant={"outline"}
-                                className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                                )}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                            <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={(date) => {
-                                    if(date) field.onChange(date)
-                                    setIsCalendarOpen(false);
-                                }}
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                )}
-            />
-             {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>}
-          </div>
-
-
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden min-h-0">
+          <div className="flex-1 overflow-y-auto py-1 pr-1 space-y-4 min-h-0">
             <div>
-              <Label htmlFor="energyLevel">Energy Level</Label>
-              <Controller
-                name="energyLevel"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger id="energyLevel">
-                      <SelectValue placeholder="Select energy" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Low">Low</SelectItem>
-                      <SelectItem value="Medium">Medium</SelectItem>
-                      <SelectItem value="High">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+              <Label htmlFor="title">Title</Label>
+              <Input id="title" {...register('title')} />
+              {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
             </div>
+
             <div>
-              <Label htmlFor="projectId">Link to Project (Optional)</Label>
-               <Controller
-                name="projectId"
+              <Label htmlFor="category">Category</Label>
+              <Controller
+                name="category"
                 control={control}
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger id="projectId">
-                      <SelectValue placeholder="No project" />
+                    <SelectTrigger id="category">
+                      <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {projects.map(p => (
-                        <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                      {(['Personal', 'Work', 'Freelancing', 'Mind & Body'] as QuestCategory[]).map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
+              {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>}
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+              
             <div>
-              <Label htmlFor="priority">Priority (Eisenhower Matrix)</Label>
-               <Controller
-                name="priority"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={(val) => field.onChange(parseInt(val))} defaultValue={field.value.toString()}>
-                    <SelectTrigger id="priority">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Urgent & Important</SelectItem>
-                      <SelectItem value="2">Important (Not Urgent)</SelectItem>
-                      <SelectItem value="3">Urgent (Not Important)</SelectItem>
-                      <SelectItem value="4">Backlog (Neither)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
+              <Label>Date</Label>
+              <Controller
+                  name="date"
+                  control={control}
+                  render={({ field }) => (
+                       <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                          <PopoverTrigger asChild>
+                              <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                  )}
+                              >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                              </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                              <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={(date) => {
+                                      if(date) field.onChange(date)
+                                      setIsCalendarOpen(false);
+                                  }}
+                                  initialFocus
+                              />
+                          </PopoverContent>
+                      </Popover>
+                  )}
               />
+               {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>}
             </div>
-            <div>
-              <Label htmlFor="xp">Experience Points (XP)</Label>
-              <Input id="xp" type="number" {...register('xp')} />
-              {errors.xp && <p className="text-red-500 text-sm mt-1">{errors.xp.message}</p>}
-            </div>
-          </div>
 
-          <div>
-             <Label htmlFor="notes">Quest Notes (Details/Artifacts)</Label>
-             <Textarea 
-                id="notes" 
-                placeholder="Add links, resources, or specific sub-tasks..." 
-                className="min-h-[80px]"
-                {...register('notes')}
-             />
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="time">Time</Label>
-               <Controller
-                name="time"
-                control={control}
-                render={({ field }) => (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="energyLevel">Energy Level</Label>
+                <Controller
+                  name="energyLevel"
+                  control={control}
+                  render={({ field }) => (
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger id="time">
-                        <SelectValue placeholder="Select a time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <ScrollArea className="h-72">
-                        {timeOptions.map(time => (
-                            <SelectItem key={time} value={time}>{time}</SelectItem>
-                        ))}
-                      </ScrollArea>
-                    </SelectContent>
+                      <SelectTrigger id="energyLevel">
+                        <SelectValue placeholder="Select energy" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Low">Low</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="High">High</SelectItem>
+                      </SelectContent>
                     </Select>
-                )}
+                  )}
                 />
-              {errors.time && <p className="text-red-500 text-sm mt-1">{errors.time.message}</p>}
+              </div>
+              <div>
+                <Label htmlFor="projectId">Link to Project (Optional)</Label>
+                 <Controller
+                  name="projectId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger id="projectId">
+                        <SelectValue placeholder="No project" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {projects.map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="priority">Priority (Eisenhower Matrix)</Label>
+                 <Controller
+                  name="priority"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={(val) => field.onChange(parseInt(val))} defaultValue={field.value.toString()}>
+                      <SelectTrigger id="priority">
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Urgent & Important</SelectItem>
+                        <SelectItem value="2">Important (Not Urgent)</SelectItem>
+                        <SelectItem value="3">Urgent (Not Important)</SelectItem>
+                        <SelectItem value="4">Backlog (Neither)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+              <div>
+                <Label htmlFor="xp">Experience Points (XP)</Label>
+                <Input id="xp" type="number" {...register('xp')} />
+                {errors.xp && <p className="text-red-500 text-sm mt-1">{errors.xp.message}</p>}
+              </div>
+            </div>
+
+            <div>
+               <Label htmlFor="notes">Quest Notes (Details/Artifacts)</Label>
+               <Textarea 
+                  id="notes" 
+                  placeholder="Add links, resources, or specific sub-tasks..." 
+                  className="min-h-[80px]"
+                  {...register('notes')}
+               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="time">Time</Label>
+                 <Controller
+                  name="time"
+                  control={control}
+                  render={({ field }) => (
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger id="time">
+                          <SelectValue placeholder="Select a time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <ScrollArea className="h-72">
+                          {timeOptions.map(time => (
+                              <SelectItem key={time} value={time}>{time}</SelectItem>
+                          ))}
+                        </ScrollArea>
+                      </SelectContent>
+                      </Select>
+                  )}
+                  />
+                {errors.time && <p className="text-red-500 text-sm mt-1">{errors.time.message}</p>}
+              </div>
             </div>
           </div>
-           <DialogFooter>
+          <DialogFooter className="mt-4 shrink-0 flex flex-row justify-end gap-2">
             <DialogClose asChild>
-              <Button type="button" variant="secondary">Cancel</Button>
+              <Button type="button" variant="secondary" className="flex-1 sm:flex-none">Cancel</Button>
             </DialogClose>
-            <Button type="submit">Save Quest</Button>
+            <Button type="submit" className="flex-1 sm:flex-none">Save Quest</Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -91,10 +91,20 @@ function BottomNavBar() {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
     return (
-        <div className="flex min-h-screen w-full bg-background selection:bg-primary/20 antialiased overflow-x-hidden">
-            <Sidebar />
-            <div className="flex flex-col flex-1 pb-32 lg:pb-0">
-                {children}
+        <div className="flex min-h-screen w-full bg-background selection:bg-primary/20 antialiased overflow-x-hidden relative">
+            {/* Ambient Background Glows */}
+            <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-40">
+                <div className="absolute -top-[30%] -left-[10%] w-[70%] aspect-square rounded-full bg-primary/10 blur-[120px] transition-colors duration-500" />
+                <div className="absolute -bottom-[20%] -right-[10%] w-[50%] aspect-square rounded-full bg-accent/5 blur-[100px] transition-colors duration-500" />
+                {/* Dynamic Subtle Grid overlay */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+            </div>
+
+            <div className="flex w-full z-10 relative">
+                <Sidebar />
+                <div className="flex flex-col flex-1 pb-32 lg:pb-0">
+                    {children}
+                </div>
             </div>
             <BottomNavBar />
         </div>

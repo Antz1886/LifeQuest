@@ -32,6 +32,7 @@ export interface UserProfile {
   }
   title?: string;
   avatarUrl?: string;
+  theme?: string;
 }
 
 export interface ProjectTask {

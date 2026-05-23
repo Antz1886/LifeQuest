@@ -143,7 +143,7 @@ function QuestItem({ quest }: { quest: Quest }) {
             </div>
         )}
       </div>
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
         {!quest.isCompleted && (
             <FocusMode quest={quest}>
                 <Button variant="ghost" size="icon">
@@ -249,7 +249,7 @@ function QuestCategoryTabs({ quests }: { quests: Quest[] }) {
          <Tabs defaultValue="All" className="w-full">
           <div className="md:hidden">
             <ScrollArea className="w-full whitespace-nowrap rounded-md">
-              <TabsList className="grid w-max grid-cols-6">
+              <TabsList className="flex w-max gap-1.5 p-1">
                 <TabsTrigger value="All">All</TabsTrigger>
                 <TabsTrigger value="Strategic" className="gap-1"><Layout className="w-3 h-3"/>Strategic</TabsTrigger>
                 {categories.map((cat) => (
