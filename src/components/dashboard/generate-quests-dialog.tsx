@@ -31,7 +31,7 @@ export function GenerateQuestsDialog() {
     const [syncedEvents, setSyncedEvents] = useState<CalendarEvent[]>([]);
     const [syncSource, setSyncSource] = useState<'google' | 'outlook' | null>(null);
     const { setQuests, projects } = useUser();
-    const { accessToken, signInWithGoogle } = useAuth();
+    const { accessToken, signInWithGoogle, clearAccessToken } = useAuth();
     const { toast } = useToast();
 
     const handleSyncGoogle = async () => {
@@ -53,13 +53,22 @@ export function GenerateQuestsDialog() {
                 title: "Google Calendar Synced",
                 description: `Found ${events.length} upcoming events.`,
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Google Sync failed:", error);
-            toast({
-                title: "Sync Failed",
-                description: "Could not fetch Google Calendar events.",
-                variant: "destructive",
-            });
+            if (error.status === 401) {
+                clearAccessToken();
+                toast({
+                    title: "Connection Expired",
+                    description: "Google Calendar authorization has expired. Please try syncing again to re-authorize.",
+                    variant: "destructive",
+                });
+            } else {
+                toast({
+                    title: "Sync Failed",
+                    description: "Could not fetch Google Calendar events.",
+                    variant: "destructive",
+                });
+            }
         } finally {
             setIsSyncing(false);
         }

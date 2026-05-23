@@ -115,7 +115,7 @@ const mockEvents: CalendarEvent[] = [
 
 export default function PlannerPage() {
   const { quests, addQuest, completeQuest, profile } = useUser();
-  const { accessToken, user, signInWithGoogle } = useAuth();
+  const { accessToken, user, signInWithGoogle, clearAccessToken } = useAuth();
   const { toast } = useToast();
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -174,12 +174,23 @@ export default function PlannerPage() {
       }
     } catch (error: any) {
       console.error("Google Sync failed:", error);
-      if (!silent) {
-        toast({
-          title: "Sync Failed",
-          description: error.message || "Failed to load events.",
-          variant: "destructive",
-        });
+      if (error.status === 401) {
+        clearAccessToken();
+        if (!silent) {
+          toast({
+            title: "Connection Expired",
+            description: "Google Calendar authorization has expired. Please click Sync again to re-authorize.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        if (!silent) {
+          toast({
+            title: "Sync Failed",
+            description: error.message || "Failed to load events.",
+            variant: "destructive",
+          });
+        }
       }
       // Fallback to mock data if actual fetch fails
       setSyncedEvents(mockEvents);
