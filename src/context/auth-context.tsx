@@ -11,7 +11,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   accessToken: string | null;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<string | null>;
   logout: () => Promise<void>;
   clearAccessToken: () => void;
 }
@@ -33,14 +33,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (): Promise<string | null> => {
     setLoading(true);
+    let token: string | null = null;
     try {
         googleProvider.addScope('https://www.googleapis.com/auth/calendar.readonly');
         const result = await signInWithPopup(auth, googleProvider);
         const credential = GoogleAuthProvider.credentialFromResult(result);
         if (credential) {
-            const token = credential.accessToken || null;
+            token = credential.accessToken || null;
             setAccessToken(token);
             if (token) sessionStorage.setItem('google_access_token', token);
         }
@@ -50,6 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
+    return token;
   };
 
   const logout = async () => {

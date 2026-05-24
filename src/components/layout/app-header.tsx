@@ -37,7 +37,7 @@ export function AppHeader({ title }: { title: string }) {
                  <h1 className="text-xl font-headline font-semibold text-muted-foreground">{title}</h1>
             </div>
            
-            <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
+            <div className="flex flex-grow items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
                  <div className="ml-auto flex items-center gap-4">
                     <div className="hidden sm:block w-full max-w-[200px]">
                         <div className="flex justify-between items-center mb-1">

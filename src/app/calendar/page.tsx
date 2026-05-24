@@ -150,20 +150,21 @@ export default function PlannerPage() {
   }, [accessToken]);
 
   const handleSyncGoogle = async (silent = false) => {
-    if (!accessToken) {
+    let currentToken = accessToken;
+    if (!currentToken) {
       if (!silent) {
         toast({
           title: "Sign-In Required",
           description: "Authorizing with Google to sync your calendar.",
         });
-        await signInWithGoogle();
+        currentToken = await signInWithGoogle();
       }
-      return;
+      if (!currentToken) return;
     }
 
     setIsSyncing(true);
     try {
-      const events = await fetchGoogleCalendarEvents(accessToken);
+      const events = await fetchGoogleCalendarEvents(currentToken);
       setSyncedEvents(events);
       setUsingDemoData(false);
       if (!silent) {
@@ -174,7 +175,15 @@ export default function PlannerPage() {
       }
     } catch (error: any) {
       console.error("Google Sync failed:", error);
-      if (error.status === 401) {
+      const isAuthError = 
+        error.status === 401 || 
+        error.status === '401' || 
+        error.message?.toLowerCase().includes('invalid authentication credentials') ||
+        error.message?.toLowerCase().includes('expected oauth 2 access token') ||
+        error.message?.toLowerCase().includes('unauthenticated') ||
+        error.message?.toLowerCase().includes('expired');
+
+      if (isAuthError) {
         clearAccessToken();
         if (!silent) {
           toast({

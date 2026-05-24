@@ -102,7 +102,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             <div className="flex w-full z-10 relative">
                 <Sidebar />
-                <div className="flex flex-col flex-1 pb-32 lg:pb-0">
+                <div className="flex flex-col flex-1 min-w-0 pb-32 lg:pb-0">
                     {children}
                 </div>
             </div>
