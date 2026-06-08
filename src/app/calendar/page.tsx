@@ -335,6 +335,7 @@ export default function PlannerPage() {
   // Filter quests & events for the selected date
   const questsOnSelectedDay = useMemo(() => {
     return quests.filter(q => {
+      if (!q.date) return false;
       const qDate = parseISO(q.date);
       return isValid(qDate) && isSameDay(qDate, selectedDate);
     });

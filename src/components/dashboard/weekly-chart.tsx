@@ -39,7 +39,7 @@ export function WeeklyChart() {
 
     // Distribute completed quests to the correct day
     quests.forEach((quest: Quest) => {
-      if (quest.isCompleted && quest.completedAt) {
+      if (quest.isCompleted && quest.completedAt && quest.date) {
         const completionDay = startOfDay(parseISO(quest.date));
         const dayData = data.find(d => isSameDay(d.date, completionDay));
         if (dayData) {

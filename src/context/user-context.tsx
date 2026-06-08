@@ -32,7 +32,7 @@ const calculateStreaks = (completedQuests: Quest[]) => {
     };
 
     const sortedQuests = completedQuests
-        .filter(q => q.completedAt && q.category in categoryMap)
+        .filter(q => q.date && q.completedAt && q.category in categoryMap)
         .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
 
     const calculateStreakForCategory = (cat: keyof typeof streaks) => {
@@ -40,7 +40,7 @@ const calculateStreaks = (completedQuests: Quest[]) => {
         let currentDate = startOfDay(new Date());
         
         const categoryQuests = sortedQuests.filter(q => categoryMap[q.category] === cat);
-        const uniqueDays = Array.from(new Set(categoryQuests.map(q => startOfDay(parseISO(q.date)).getTime()))).sort((a,b) => b-a);
+        const uniqueDays = Array.from(new Set(categoryQuests.filter(q => q.date).map(q => startOfDay(parseISO(q.date)).getTime()))).sort((a,b) => b-a);
         
         if (uniqueDays.length === 0) return 0;
         

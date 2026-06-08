@@ -289,8 +289,8 @@ export function QuestBoard() {
   const { quests } = useUser();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const todaysQuests = quests.filter(q => isToday(parseISO(q.date)) && !q.isCompleted);
-  const tomorrowsQuests = quests.filter(q => isTomorrow(parseISO(q.date)) && !q.isCompleted);
+  const todaysQuests = quests.filter(q => q.date && isToday(parseISO(q.date)) && !q.isCompleted);
+  const tomorrowsQuests = quests.filter(q => q.date && isTomorrow(parseISO(q.date)) && !q.isCompleted);
   const completedHistory = quests.filter(q => q.isCompleted).sort((a,b) => (b.completedAt || 0) - (a.completedAt || 0));
 
   return (
