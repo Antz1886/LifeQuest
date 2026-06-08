@@ -12,7 +12,7 @@ LifeQuest is a **Next.js** application that leverages **Firebase** for its backe
 The AI capabilities are built using **Firebase Genkit**, which provides a structured way to define "Flows" and "Prompts."
 - **Quests Flow**: Orchestrates the conversion of user goals, active projects, and weather data into structured JSON quest objects.
 - **Meditation Flow**: Uses a multi-step flow that first generates a script via Gemini and then synthesizes audio using Gemini's built-in TTS capabilities.
-- **Models**: Primarily utilizes `gemini-2.0-flash` for high-speed, low-latency reasoning and generation.
+- **Models**: Primarily utilizes `gemini-2.5-flash` for high-speed, low-latency reasoning and generation.
 
 ### 🔄 Real-time Data Sync (Firestore)
 The application implements a "Cloud-First, Local-Second" state management strategy:

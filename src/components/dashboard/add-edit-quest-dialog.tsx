@@ -31,7 +31,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { useUser } from '@/context/user-context';
 import { Quest, QuestCategory, Priority } from '@/lib/types';
 import { PlusCircle, Edit, CalendarIcon } from 'lucide-react';
-import { format, formatISO } from 'date-fns';
+import { format, formatISO, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -77,7 +77,7 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
       category: quest?.category || 'Personal',
       xp: quest?.xp || 50,
       time: quest?.time || '09:00 AM',
-      date: quest ? new Date(quest.date) : new Date(),
+      date: quest ? parseISO(quest.date) : new Date(),
       energyLevel: quest?.energyLevel || 'Medium',
       projectId: quest?.projectId || '',
       priority: quest?.priority || 2,
@@ -92,7 +92,7 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
         category: quest.category,
         xp: quest.xp,
         time: quest.time,
-        date: new Date(quest.date),
+        date: parseISO(quest.date),
         energyLevel: quest.energyLevel,
         projectId: quest.projectId || 'none',
         priority: quest.priority,

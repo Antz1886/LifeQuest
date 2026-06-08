@@ -45,7 +45,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { isToday, isTomorrow, addDays } from "date-fns";
+import { isToday, isTomorrow, addDays, parseISO } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 
 const categoryIcons: Record<QuestCategory, React.ReactNode> = {
@@ -289,8 +289,8 @@ export function QuestBoard() {
   const { quests } = useUser();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const todaysQuests = quests.filter(q => isToday(new Date(q.date)) && !q.isCompleted);
-  const tomorrowsQuests = quests.filter(q => isTomorrow(new Date(q.date)) && !q.isCompleted);
+  const todaysQuests = quests.filter(q => isToday(parseISO(q.date)) && !q.isCompleted);
+  const tomorrowsQuests = quests.filter(q => isTomorrow(parseISO(q.date)) && !q.isCompleted);
   const completedHistory = quests.filter(q => q.isCompleted).sort((a,b) => (b.completedAt || 0) - (a.completedAt || 0));
 
   return (

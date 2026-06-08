@@ -10,14 +10,15 @@ export interface CalendarEvent {
     description?: string;
 }
 
-export async function fetchGoogleCalendarEvents(accessToken: string): Promise<CalendarEvent[]> {
-    const now = new Date();
-    const timeMin = now.toISOString();
-    const nextTwoDays = new Date(now);
-    nextTwoDays.setDate(now.getDate() + 2);
-    const timeMax = nextTwoDays.toISOString();
+export async function fetchGoogleCalendarEvents(
+    accessToken: string,
+    timeMin?: string,
+    timeMax?: string
+): Promise<CalendarEvent[]> {
+    const min = timeMin || new Date().toISOString();
+    const max = timeMax || new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
 
-    const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&timeMax=${encodeURIComponent(timeMax)}&singleEvents=true&orderBy=startTime`;
+    const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(min)}&timeMax=${encodeURIComponent(max)}&singleEvents=true&orderBy=startTime`;
 
     const response = await fetch(url, {
         headers: {

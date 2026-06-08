@@ -138,17 +138,6 @@ export default function PlannerPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [quickAddTime, setQuickAddTime] = useState("09:00 AM");
 
-  // Load Google Calendar events automatically if token is active
-  useEffect(() => {
-    if (accessToken) {
-      handleSyncGoogle(true);
-    } else {
-      // Initialize with demo events for a rich user experience out-of-the-box
-      setSyncedEvents(mockEvents);
-      setUsingDemoData(true);
-    }
-  }, [accessToken]);
-
   const handleSyncGoogle = async (silent = false) => {
     let currentToken = accessToken;
     if (!currentToken) {
@@ -164,7 +153,16 @@ export default function PlannerPage() {
 
     setIsSyncing(true);
     try {
-      const events = await fetchGoogleCalendarEvents(currentToken);
+      const startRange = new Date(selectedDate);
+      startRange.setDate(selectedDate.getDate() - 30);
+      const endRange = new Date(selectedDate);
+      endRange.setDate(selectedDate.getDate() + 30);
+
+      const events = await fetchGoogleCalendarEvents(
+        currentToken,
+        startRange.toISOString(),
+        endRange.toISOString()
+      );
       setSyncedEvents(events);
       setUsingDemoData(false);
       if (!silent) {
@@ -208,6 +206,17 @@ export default function PlannerPage() {
       setIsSyncing(false);
     }
   };
+
+  // Load Google Calendar events automatically if token is active or selected date changes
+  useEffect(() => {
+    if (accessToken) {
+      handleSyncGoogle(true);
+    } else {
+      // Initialize with demo events for a rich user experience out-of-the-box
+      setSyncedEvents(mockEvents);
+      setUsingDemoData(true);
+    }
+  }, [accessToken, selectedDate]);
 
   const handleLoadDemo = () => {
     setSyncedEvents(mockEvents);

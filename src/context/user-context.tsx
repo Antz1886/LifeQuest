@@ -6,7 +6,7 @@ import { useAuth } from './auth-context';
 import { userProfile as initialProfile, quests as initialQuests } from '@/lib/mock-data';
 import type { UserProfile, Quest, Project, ProjectTask, QuestCategory, SavedMeditation } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { isSameDay, subDays, startOfDay, formatISO } from 'date-fns';
+import { isSameDay, subDays, startOfDay, formatISO, parseISO } from 'date-fns';
 import { Loader2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { 
@@ -33,14 +33,14 @@ const calculateStreaks = (completedQuests: Quest[]) => {
 
     const sortedQuests = completedQuests
         .filter(q => q.completedAt && q.category in categoryMap)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
 
     const calculateStreakForCategory = (cat: keyof typeof streaks) => {
         let streak = 0;
         let currentDate = startOfDay(new Date());
         
         const categoryQuests = sortedQuests.filter(q => categoryMap[q.category] === cat);
-        const uniqueDays = Array.from(new Set(categoryQuests.map(q => startOfDay(new Date(q.date)).getTime()))).sort((a,b) => b-a);
+        const uniqueDays = Array.from(new Set(categoryQuests.map(q => startOfDay(parseISO(q.date)).getTime()))).sort((a,b) => b-a);
         
         if (uniqueDays.length === 0) return 0;
         
@@ -109,10 +109,23 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (authLoading) return;
 
+    setIsLoaded(false);
+
     if (authUser) {
       // Authenticated User: Use Firestore
       const userDocRef = doc(db, 'users', authUser.uid);
       
+      let profileLoaded = false;
+      let questsLoaded = false;
+      let projectsLoaded = false;
+      let meditationsLoaded = false;
+
+      const checkLoaded = () => {
+        if (profileLoaded && questsLoaded && projectsLoaded && meditationsLoaded) {
+          setIsLoaded(true);
+        }
+      };
+
       // 1. Sync Profile
       const unsubProfile = onSnapshot(userDocRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -121,6 +134,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           const init = { ...initialProfile, name: authUser.displayName || initialProfile.name, avatarUrl: authUser.photoURL || initialProfile.avatarUrl };
           setDoc(userDocRef, init);
         }
+        profileLoaded = true;
+        checkLoaded();
+      }, (err) => {
+        console.error("Profile sync error", err);
+        profileLoaded = true;
+        checkLoaded();
       });
 
       // 2. Sync Quests & Handle Migration
@@ -148,6 +167,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
                 }
             }
         }
+        questsLoaded = true;
+        checkLoaded();
+      }, (err) => {
+        console.error("Quests sync error", err);
+        questsLoaded = true;
+        checkLoaded();
       });
 
       // 3. Sync Projects
@@ -155,6 +180,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       const unsubProjects = onSnapshot(projectsRef, (snapshot) => {
         const pList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
         setProjects(pList);
+        projectsLoaded = true;
+        checkLoaded();
+      }, (err) => {
+        console.error("Projects sync error", err);
+        projectsLoaded = true;
+        checkLoaded();
       });
 
       // 4. Sync Meditations
@@ -163,9 +194,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       const unsubMeds = onSnapshot(qMeds, (snapshot) => {
         const mList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SavedMeditation));
         setSavedMeditations(mList);
+        meditationsLoaded = true;
+        checkLoaded();
+      }, (err) => {
+        console.error("Meditations sync error", err);
+        meditationsLoaded = true;
+        checkLoaded();
       });
 
-      setIsLoaded(true);
       return () => {
         unsubProfile();
         unsubQuests();
