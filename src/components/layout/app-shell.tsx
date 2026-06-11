@@ -89,7 +89,11 @@ function BottomNavBar() {
     )
 }
 
+import { useUser } from '@/context/user-context';
+
 export function AppShell({ children }: { children: React.ReactNode }) {
+    const { cloudSyncError } = useUser();
+
     return (
         <div className="flex min-h-screen w-full bg-background selection:bg-primary/20 antialiased overflow-x-hidden relative">
             {/* Ambient Background Glows */}
@@ -103,6 +107,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex w-full z-10 relative">
                 <Sidebar />
                 <div className="flex flex-col flex-1 min-w-0 pb-32 lg:pb-0">
+                    {cloudSyncError && (
+                        <div className="bg-red-500/10 border-b border-red-500/20 text-red-200 px-4 py-3 text-xs sm:text-sm font-medium flex items-center justify-between gap-4 backdrop-blur-md">
+                            <div className="flex items-center gap-2">
+                                <span className="flex h-2.5 w-2.5 shrink-0 rounded-full bg-red-500 animate-pulse" />
+                                <span>
+                                    <strong>Database Sync Offline:</strong> Firestore Security Rules rejected your database writes. Data is safely saved locally on this browser. Copy the rules in <code className="bg-red-500/20 px-1.5 py-0.5 rounded font-mono text-white">firestore.rules</code> to your Firebase console to enable cross-device cloud sync.
+                                </span>
+                            </div>
+                        </div>
+                    )}
                     {children}
                 </div>
             </div>

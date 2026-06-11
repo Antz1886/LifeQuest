@@ -90,6 +90,7 @@ interface UserContextType {
   resetProgress: () => void;
   addSavedMeditation: (meditationData: { prompt: string; script: string; audioDataUri: string }) => void;
   isLoaded: boolean;
+  cloudSyncError: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -102,16 +103,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [savedMeditations, setSavedMeditations] = useState<SavedMeditation[]>([]);
   const { toast } = useToast();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [cloudSyncError, setCloudSyncError] = useState(false);
 
-  const userKey = authUser ? authUser.uid : 'guest';
+  // Reset sync error on user change
+  useEffect(() => {
+    setCloudSyncError(false);
+  }, [authUser]);
 
-  // Real-time Firestore Sync
+  // Real-time Firestore Sync or Local Storage Fallback
   useEffect(() => {
     if (authLoading) return;
 
     setIsLoaded(false);
 
-    if (authUser) {
+    if (authUser && !cloudSyncError) {
       // Authenticated User: Use Firestore
       const userDocRef = doc(db, 'users', authUser.uid);
       
@@ -126,21 +131,39 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         }
       };
 
+      const handleSyncError = (err: any, source: string) => {
+        console.error(`${source} sync error`, err);
+        const isPermissionDenied = err.code === 'permission-denied' || 
+                                   err.message?.toLowerCase().includes('permission') || 
+                                   err.message?.toLowerCase().includes('denied');
+        if (isPermissionDenied) {
+          setCloudSyncError(true);
+          toast({
+            title: "Database Sync Offline",
+            description: "Access denied by Security Rules. Falling back to local storage.",
+            variant: "destructive",
+          });
+        }
+        
+        // Mark as loaded so we don't block the UI forever
+        if (source === 'Profile') profileLoaded = true;
+        if (source === 'Quests') questsLoaded = true;
+        if (source === 'Projects') projectsLoaded = true;
+        if (source === 'Meditations') meditationsLoaded = true;
+        checkLoaded();
+      };
+
       // 1. Sync Profile
       const unsubProfile = onSnapshot(userDocRef, (snapshot) => {
         if (snapshot.exists()) {
           setProfile(snapshot.data() as UserProfile);
         } else {
           const init = { ...initialProfile, name: authUser.displayName || initialProfile.name, avatarUrl: authUser.photoURL || initialProfile.avatarUrl };
-          setDoc(userDocRef, init);
+          setDoc(userDocRef, init).catch((err) => handleSyncError(err, 'Profile'));
         }
         profileLoaded = true;
         checkLoaded();
-      }, (err) => {
-        console.error("Profile sync error", err);
-        profileLoaded = true;
-        checkLoaded();
-      });
+      }, (err) => handleSyncError(err, 'Profile'));
 
       // 2. Sync Quests & Handle Migration
       const questsRef = collection(db, 'users', authUser.uid, 'quests');
@@ -149,31 +172,68 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         const qList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Quest));
         setQuests(qList);
 
-        // MIGRATION LOGIC: If Firestore is empty but localStorage has guest data, offer to migrate
+        // MIGRATION LOGIC: If Firestore is empty, migrate guest data from local storage
         if (qList.length === 0) {
-            const guestQuests = localStorage.getItem('userQuests_guest');
-            if (guestQuests) {
-                const parsed = JSON.parse(guestQuests);
-                if (parsed.length > 0) {
-                    const batch = writeBatch(db);
-                    parsed.forEach((q: Quest) => {
-                        const newRef = doc(db, 'users', authUser.uid, 'quests', q.id);
-                        batch.set(newRef, q);
-                    });
-                    batch.commit().then(() => {
-                        toast({ title: "Data Synced!", description: "Your local history has been moved to the cloud." });
-                        localStorage.removeItem('userQuests_guest');
-                    });
-                }
+          const guestQuestsStr = localStorage.getItem('userQuests_guest');
+          const guestProjectsStr = localStorage.getItem('userProjects_guest');
+          const guestMeditationsStr = localStorage.getItem('userMeditations_guest');
+          const guestProfileStr = localStorage.getItem('userProfile_guest');
+
+          const guestQuests = guestQuestsStr ? JSON.parse(guestQuestsStr) : [];
+          const guestProjects = guestProjectsStr ? JSON.parse(guestProjectsStr) : [];
+          const guestMeditations = guestMeditationsStr ? JSON.parse(guestMeditationsStr) : [];
+
+          if (guestQuests.length > 0 || guestProjects.length > 0 || guestMeditations.length > 0) {
+            const batch = writeBatch(db);
+
+            if (guestProfileStr) {
+              const parsedProfile = JSON.parse(guestProfileStr);
+              batch.set(userDocRef, {
+                ...initialProfile,
+                name: authUser.displayName || initialProfile.name,
+                avatarUrl: authUser.photoURL || initialProfile.avatarUrl,
+                level: parsedProfile.level || 1,
+                xp: parsedProfile.xp || 0,
+                xpToNextLevel: parsedProfile.xpToNextLevel || 100,
+                theme: parsedProfile.theme || 'default',
+                streaks: parsedProfile.streaks || { personal: 0, work: 0, freelancing: 0, mindBody: 0 },
+              }, { merge: true });
             }
+
+            guestQuests.forEach((q: Quest) => {
+              const newRef = doc(db, 'users', authUser.uid, 'quests', q.id);
+              batch.set(newRef, q);
+            });
+
+            guestProjects.forEach((p: Project) => {
+              const newRef = doc(db, 'users', authUser.uid, 'projects', p.id);
+              batch.set(newRef, p);
+            });
+
+            guestMeditations.forEach((m: SavedMeditation) => {
+              const newRef = doc(db, 'users', authUser.uid, 'meditations', m.id);
+              batch.set(newRef, m);
+            });
+
+            batch.commit()
+              .then(() => {
+                toast({ 
+                  title: "Data Synced!", 
+                  description: "Your local quests, projects, and meditations have been migrated to the cloud." 
+                });
+                localStorage.removeItem('userQuests_guest');
+                localStorage.removeItem('userProjects_guest');
+                localStorage.removeItem('userMeditations_guest');
+                localStorage.removeItem('userProfile_guest');
+              })
+              .catch((err) => {
+                console.error("Migration failed:", err);
+              });
+          }
         }
         questsLoaded = true;
         checkLoaded();
-      }, (err) => {
-        console.error("Quests sync error", err);
-        questsLoaded = true;
-        checkLoaded();
-      });
+      }, (err) => handleSyncError(err, 'Quests'));
 
       // 3. Sync Projects
       const projectsRef = collection(db, 'users', authUser.uid, 'projects');
@@ -182,11 +242,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setProjects(pList);
         projectsLoaded = true;
         checkLoaded();
-      }, (err) => {
-        console.error("Projects sync error", err);
-        projectsLoaded = true;
-        checkLoaded();
-      });
+      }, (err) => handleSyncError(err, 'Projects'));
 
       // 4. Sync Meditations
       const medsRef = collection(db, 'users', authUser.uid, 'meditations');
@@ -196,11 +252,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setSavedMeditations(mList);
         meditationsLoaded = true;
         checkLoaded();
-      }, (err) => {
-        console.error("Meditations sync error", err);
-        meditationsLoaded = true;
-        checkLoaded();
-      });
+      }, (err) => handleSyncError(err, 'Meditations'));
 
       return () => {
         unsubProfile();
@@ -209,35 +261,51 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         unsubMeds();
       };
     } else {
-      // Guest: Use localStorage
+      // Guest or sync offline fallback
+      const keySuffix = authUser ? authUser.uid : 'guest';
       try {
-        const savedProfile = localStorage.getItem(`userProfile_guest`);
-        const savedQuests = localStorage.getItem(`userQuests_guest`);
-        const savedProjects = localStorage.getItem(`userProjects_guest`);
-        const savedMeditations = localStorage.getItem(`userMeditations_guest`);
+        const savedProfile = localStorage.getItem(`userProfile_${keySuffix}`);
+        const savedQuests = localStorage.getItem(`userQuests_${keySuffix}`);
+        const savedProjects = localStorage.getItem(`userProjects_${keySuffix}`);
+        const savedMeditations = localStorage.getItem(`userMeditations_${keySuffix}`);
 
-        if (savedProfile) setProfile(JSON.parse(savedProfile));
+        if (savedProfile) {
+          setProfile(JSON.parse(savedProfile));
+        } else {
+          const init = authUser ? {
+            ...initialProfile,
+            name: authUser.displayName || initialProfile.name,
+            avatarUrl: authUser.photoURL || initialProfile.avatarUrl
+          } : initialProfile;
+          setProfile(init);
+        }
+        
         if (savedQuests) setQuests(JSON.parse(savedQuests));
+        else setQuests([]);
+
         if (savedProjects) setProjects(JSON.parse(savedProjects));
+        else setProjects([]);
+
         if (savedMeditations) setSavedMeditations(JSON.parse(savedMeditations));
+        else setSavedMeditations([]);
       } catch (e) {
-        console.error("Guest storage load failed", e);
+        console.error("Local storage load failed", e);
       } finally {
         setIsLoaded(true);
       }
     }
-  }, [authUser, authLoading]);
+  }, [authUser, authLoading, cloudSyncError]);
 
-  // Fallback for Guest Data Persistence
+  // Local Data Persistence when Offline/Guest
   useEffect(() => {
-    if (isLoaded && !authUser) {
-      localStorage.setItem('userProfile_guest', JSON.stringify(profile));
-      localStorage.setItem('userQuests_guest', JSON.stringify(quests));
-      localStorage.setItem('userProjects_guest', JSON.stringify(projects));
-      localStorage.setItem('userMeditations_guest', JSON.stringify(savedMeditations));
+    if (isLoaded && (!authUser || cloudSyncError)) {
+      const keySuffix = authUser ? authUser.uid : 'guest';
+      localStorage.setItem(`userProfile_${keySuffix}`, JSON.stringify(profile));
+      localStorage.setItem(`userQuests_${keySuffix}`, JSON.stringify(quests));
+      localStorage.setItem(`userProjects_${keySuffix}`, JSON.stringify(projects));
+      localStorage.setItem(`userMeditations_${keySuffix}`, JSON.stringify(savedMeditations));
     }
-  }, [profile, quests, projects, savedMeditations, isLoaded, authUser]);
-
+  }, [profile, quests, projects, savedMeditations, isLoaded, authUser, cloudSyncError]);
 
   // Recalculate streaks and update profile state when quests change
   useEffect(() => {
@@ -253,6 +321,42 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [quests, isLoaded]);
 
+  // Helper helper to wrap database write and fall back locally on failure
+  const executeWrite = async (
+    cloudWriteFn: () => Promise<void>,
+    localWriteFn: () => void,
+    errorTitle: string = "Write failed"
+  ) => {
+    if (authUser && !cloudSyncError) {
+      try {
+        await cloudWriteFn();
+      } catch (error: any) {
+        console.error(`${errorTitle}:`, error);
+        const isPermissionDenied = error.code === 'permission-denied' || 
+                                   error.message?.toLowerCase().includes('permission') || 
+                                   error.message?.toLowerCase().includes('denied');
+        if (isPermissionDenied) {
+          setCloudSyncError(true);
+          localWriteFn();
+          toast({
+            title: "Database Sync Offline",
+            description: "Write rejected by Security Rules. Switched to local storage.",
+            variant: "destructive",
+          });
+        } else {
+          setCloudSyncError(true);
+          localWriteFn();
+          toast({
+            title: "Sync Error",
+            description: "Connection error. Saving locally instead.",
+            variant: "destructive",
+          });
+        }
+      }
+    } else {
+      localWriteFn();
+    }
+  };
 
   const addQuest = async (questData: Omit<Quest, 'id' | 'isCompleted' | 'completedAt' | 'createdAt'>) => {
     const id = `q-${Date.now()}-${Math.random()}`;
@@ -263,29 +367,41 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       createdAt: Date.now(),
     };
 
-    if (authUser) {
-      await setDoc(doc(db, 'users', authUser.uid, 'quests', id), newQuest);
-    } else {
-      setQuests(prevQuests => [...prevQuests, newQuest]);
-    }
+    await executeWrite(
+      async () => {
+        await setDoc(doc(db, 'users', authUser.uid, 'quests', id), newQuest);
+      },
+      () => {
+        setQuests(prevQuests => [...prevQuests, newQuest]);
+      },
+      "Add Quest"
+    );
     toast({ title: "Quest Added!", description: "A new quest has been added to your board." });
   };
 
   const editQuest = async (updatedQuest: Quest) => {
-    if (authUser) {
-      await setDoc(doc(db, 'users', authUser.uid, 'quests', updatedQuest.id), updatedQuest);
-    } else {
-      setQuests(prevQuests => prevQuests.map(q => q.id === updatedQuest.id ? updatedQuest : q));
-    }
+    await executeWrite(
+      async () => {
+        await setDoc(doc(db, 'users', authUser.uid, 'quests', updatedQuest.id), updatedQuest);
+      },
+      () => {
+        setQuests(prevQuests => prevQuests.map(q => q.id === updatedQuest.id ? updatedQuest : q));
+      },
+      "Edit Quest"
+    );
     toast({ title: "Quest Updated!", description: "Your quest has been successfully updated." });
   };
   
   const deleteQuest = async (questId: string) => {
-    if (authUser) {
-      await deleteDoc(doc(db, 'users', authUser.uid, 'quests', questId));
-    } else {
-      setQuests(prevQuests => prevQuests.filter(q => q.id !== questId));
-    }
+    await executeWrite(
+      async () => {
+        await deleteDoc(doc(db, 'users', authUser.uid, 'quests', questId));
+      },
+      () => {
+        setQuests(prevQuests => prevQuests.filter(q => q.id !== questId));
+      },
+      "Delete Quest"
+    );
     toast({ title: "Quest Deleted", description: "The quest has been removed from your board."});
   };
 
@@ -321,15 +437,19 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         updatedProfile = { ...profile, xp: newXp };
     }
 
-    if (authUser) {
+    await executeWrite(
+      async () => {
         const batch = writeBatch(db);
         batch.set(doc(db, 'users', authUser.uid, 'quests', questId), { ...quest, isCompleted: isNowCompleted, completedAt });
         batch.set(doc(db, 'users', authUser.uid), updatedProfile);
         await batch.commit();
-    } else {
+      },
+      () => {
         setQuests(prevQuests => prevQuests.map(q => q.id === questId ? { ...q, isCompleted: isNowCompleted, completedAt } : q));
         setProfile(updatedProfile);
-    }
+      },
+      "Complete Quest"
+    );
     
     if (isNowCompleted) {
         if (leveledUp) {
@@ -350,11 +470,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       id,
       tasks: [],
     };
-    if (authUser) {
-      await setDoc(doc(db, 'users', authUser.uid, 'projects', id), newProject);
-    } else {
-      setProjects(prevProjects => [...prevProjects, newProject]);
-    }
+    await executeWrite(
+      async () => {
+        await setDoc(doc(db, 'users', authUser.uid, 'projects', id), newProject);
+      },
+      () => {
+        setProjects(prevProjects => [...prevProjects, newProject]);
+      },
+      "Add Project"
+    );
   };
   
   const toggleProjectTask = async (projectId: string, taskId: string) => {
@@ -363,14 +487,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const updatedTasks = project.tasks.map(t => t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t);
     const updatedProject = { ...project, tasks: updatedTasks };
 
-    if (authUser) {
-      await setDoc(doc(db, 'users', authUser.uid, 'projects', projectId), updatedProject);
-    } else {
-      setProjects(prevProjects => prevProjects.map(p => p.id === projectId ? updatedProject : p));
-    }
+    await executeWrite(
+      async () => {
+        await setDoc(doc(db, 'users', authUser.uid, 'projects', projectId), updatedProject);
+      },
+      () => {
+        setProjects(prevProjects => prevProjects.map(p => p.id === projectId ? updatedProject : p));
+      },
+      "Toggle Project Task"
+    );
   };
 
-   const addProjectTask = async (projectId: string, taskText: string) => {
+  const addProjectTask = async (projectId: string, taskText: string) => {
     if (!taskText.trim()) return;
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
@@ -382,11 +510,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     };
     const updatedProject = { ...project, tasks: [...project.tasks, newTask] };
 
-    if (authUser) {
-      await setDoc(doc(db, 'users', authUser.uid, 'projects', projectId), updatedProject);
-    } else {
-      setProjects(prevProjects => prevProjects.map(p => p.id === projectId ? updatedProject : p));
-    }
+    await executeWrite(
+      async () => {
+        await setDoc(doc(db, 'users', authUser.uid, 'projects', projectId), updatedProject);
+      },
+      () => {
+        setProjects(prevProjects => prevProjects.map(p => p.id === projectId ? updatedProject : p));
+      },
+      "Add Project Task"
+    );
   };
 
   const deleteProjectTask = async (projectId: string, taskId: string) => {
@@ -394,13 +526,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     if (!project) return;
     const updatedProject = { ...project, tasks: project.tasks.filter(t => t.id !== taskId) };
 
-    if (authUser) {
-      await setDoc(doc(db, 'users', authUser.uid, 'projects', projectId), updatedProject);
-    } else {
-      setProjects(prevProjects => prevProjects.map(p => p.id === projectId ? updatedProject : p));
-    }
+    await executeWrite(
+      async () => {
+        await setDoc(doc(db, 'users', authUser.uid, 'projects', projectId), updatedProject);
+      },
+      () => {
+        setProjects(prevProjects => prevProjects.map(p => p.id === projectId ? updatedProject : p));
+      },
+      "Delete Project Task"
+    );
     toast({ title: "Task Deleted", description: "The task has been removed from the project." });
-  }
+  };
 
   // Dynamic Theme Application
   useEffect(() => {
@@ -417,20 +553,28 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const updateProfileCustomization = async (title: string, avatarUrl: string) => {
     const updatedProfile = { ...profile, title, avatarUrl };
-    if (authUser) {
-      await setDoc(doc(db, 'users', authUser.uid), updatedProfile);
-    } else {
-      setProfile(updatedProfile);
-    }
+    await executeWrite(
+      async () => {
+        await setDoc(doc(db, 'users', authUser.uid), updatedProfile);
+      },
+      () => {
+        setProfile(updatedProfile);
+      },
+      "Update Profile Customization"
+    );
   };
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     const updatedProfile = { ...profile, ...updates };
-    if (authUser) {
-      await setDoc(doc(db, 'users', authUser.uid), updatedProfile);
-    } else {
-      setProfile(updatedProfile);
-    }
+    await executeWrite(
+      async () => {
+        await setDoc(doc(db, 'users', authUser.uid), updatedProfile);
+      },
+      () => {
+        setProfile(updatedProfile);
+      },
+      "Update Profile"
+    );
   };
 
   const resetProgress = async () => {
@@ -450,20 +594,24 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       theme: "default"
     };
 
-    if (authUser) {
-      const batch = writeBatch(db);
-      batch.set(doc(db, 'users', authUser.uid), updatedProfile);
-      
-      // Delete all quests to reset board history
-      quests.forEach((q) => {
-        batch.delete(doc(db, 'users', authUser.uid, 'quests', q.id));
-      });
-      
-      await batch.commit();
-    } else {
-      setQuests([]);
-      setProfile(updatedProfile);
-    }
+    await executeWrite(
+      async () => {
+        const batch = writeBatch(db);
+        batch.set(doc(db, 'users', authUser.uid), updatedProfile);
+        
+        // Delete all quests to reset board history
+        quests.forEach((q) => {
+          batch.delete(doc(db, 'users', authUser.uid, 'quests', q.id));
+        });
+        
+        await batch.commit();
+      },
+      () => {
+        setQuests([]);
+        setProfile(updatedProfile);
+      },
+      "Reset Progress"
+    );
     toast({ title: "Progress Reset", description: "Your level, XP, streaks, and quest history have been reset to zero." });
   };
 
@@ -475,14 +623,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       createdAt: Date.now(),
     };
     
-    if (authUser) {
-      await setDoc(doc(db, 'users', authUser.uid, 'meditations', id), newMeditation);
-    } else {
-      setSavedMeditations(prev => {
-          const updated = [newMeditation, ...prev];
-          return updated.slice(0, 3);
-      });
-    }
+    await executeWrite(
+      async () => {
+        await setDoc(doc(db, 'users', authUser.uid, 'meditations', id), newMeditation);
+      },
+      () => {
+        setSavedMeditations(prev => {
+            const updated = [newMeditation, ...prev];
+            return updated.slice(0, 3);
+        });
+      },
+      "Add Saved Meditation"
+    );
   };
 
   if (!isLoaded || authLoading) {
@@ -494,7 +646,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <UserContext.Provider value={{ profile, quests, projects, savedMeditations, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask, deleteProjectTask, updateProfileCustomization, updateProfile, resetProgress, addSavedMeditation, isLoaded }}>
+    <UserContext.Provider value={{ profile, quests, projects, savedMeditations, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask, deleteProjectTask, updateProfileCustomization, updateProfile, resetProgress, addSavedMeditation, isLoaded, cloudSyncError }}>
       {children}
     </UserContext.Provider>
   );

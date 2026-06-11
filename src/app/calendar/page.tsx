@@ -79,39 +79,7 @@ const categoryIcons: Record<QuestCategory, React.ReactNode> = {
   "Mind & Body": <Dumbbell className="w-3.5 h-3.5" />,
 };
 
-// Mock calendar events for demonstration
-const mockEvents: CalendarEvent[] = [
-  {
-    summary: "Cybersecurity Standup Meeting",
-    start: { dateTime: new Date(new Date().setHours(9, 0, 0, 0)).toISOString() },
-    end: { dateTime: new Date(new Date().setHours(10, 0, 0, 0)).toISOString() },
-    description: "Daily sync with the NOC security monitoring team."
-  },
-  {
-    summary: "Freelance Client UI Sync",
-    start: { dateTime: new Date(new Date().setHours(14, 0, 0, 0)).toISOString() },
-    end: { dateTime: new Date(new Date().setHours(15, 30, 0, 0)).toISOString() },
-    description: "Show prototype components for the Women's Health Biz app."
-  },
-  {
-    summary: "Yoga & Core Strengthening",
-    start: { dateTime: new Date(new Date().setHours(17, 30, 0, 0)).toISOString() },
-    end: { dateTime: new Date(new Date().setHours(18, 15, 0, 0)).toISOString() },
-    description: "Quick recovery session and light weights."
-  },
-  {
-    summary: "Dentist Appointment",
-    start: { dateTime: new Date(addDays(new Date(), 1).setHours(11, 0, 0, 0)).toISOString() },
-    end: { dateTime: new Date(addDays(new Date(), 1).setHours(12, 0, 0, 0)).toISOString() },
-    description: "Routine cleaning checkup."
-  },
-  {
-    summary: "Family Barbecue Dinner",
-    start: { dateTime: new Date(new Date().setHours(19, 0, 0, 0)).toISOString() },
-    end: { dateTime: new Date(new Date().setHours(21, 0, 0, 0)).toISOString() },
-    description: "Celebrate birthday in the garden."
-  }
-];
+// Demo calendar events removed for production-ready calendar sync
 
 export default function PlannerPage() {
   const { quests, addQuest, completeQuest, profile } = useUser();
@@ -199,9 +167,8 @@ export default function PlannerPage() {
           });
         }
       }
-      // Fallback to mock data if actual fetch fails
-      setSyncedEvents(mockEvents);
-      setUsingDemoData(true);
+      setSyncedEvents([]);
+      setUsingDemoData(false);
     } finally {
       setIsSyncing(false);
     }
@@ -212,20 +179,10 @@ export default function PlannerPage() {
     if (accessToken) {
       handleSyncGoogle(true);
     } else {
-      // Initialize with demo events for a rich user experience out-of-the-box
-      setSyncedEvents(mockEvents);
-      setUsingDemoData(true);
+      setSyncedEvents([]);
+      setUsingDemoData(false);
     }
   }, [accessToken, selectedDate]);
-
-  const handleLoadDemo = () => {
-    setSyncedEvents(mockEvents);
-    setUsingDemoData(true);
-    toast({
-      title: "Demo Calendar Loaded",
-      description: "Showing mock schedule events for demonstration.",
-    });
-  };
 
   // Convert calendar event to quest
   const handleConvertToQuest = async (event: CalendarEvent) => {
@@ -413,41 +370,38 @@ export default function PlannerPage() {
                 </TabsList>
               </Tabs>
 
-              {user ? (
-                <Button 
-                  onClick={() => handleSyncGoogle()} 
-                  variant="outline" 
-                  size="sm" 
-                  disabled={isSyncing}
-                  className="rounded-xl border-dashed h-9"
-                >
-                  <RefreshCw className={cn("w-3.5 h-3.5 mr-1.5", isSyncing && "animate-spin")} />
-                  Sync
-                </Button>
-              ) : (
-                <div className="flex gap-1">
-                  <Button 
-                    onClick={() => handleSyncGoogle()} 
-                    variant="outline" 
-                    size="sm" 
-                    className="rounded-xl border-dashed h-9 text-xs"
-                  >
-                    Google Sync
-                  </Button>
-                  {!usingDemoData && (
-                    <Button 
-                      onClick={handleLoadDemo} 
-                      variant="ghost" 
-                      size="sm" 
-                      className="rounded-xl text-xs"
-                    >
-                      Demo Schedule
-                    </Button>
-                  )}
-                </div>
-              )}
+              <Button 
+                onClick={() => handleSyncGoogle()} 
+                variant="outline" 
+                size="sm" 
+                disabled={isSyncing}
+                className="rounded-xl border-dashed h-9"
+              >
+                <RefreshCw className={cn("w-3.5 h-3.5 mr-1.5", isSyncing && "animate-spin")} />
+                Sync Calendar
+              </Button>
             </div>
           </div>
+
+          {!accessToken && (
+            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-200 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg backdrop-blur-sm">
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold uppercase tracking-wider flex items-center gap-2 text-amber-400">
+                  <CalendarIcon className="w-4 h-4 text-amber-500" /> Google Calendar Disconnected
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Connect your Google Calendar account to view your actual meetings, sync events, and convert them into quests.
+                </p>
+              </div>
+              <Button 
+                onClick={() => handleSyncGoogle(false)}
+                disabled={isSyncing}
+                className="bg-amber-500 hover:bg-amber-600 text-black font-bold uppercase tracking-wider text-xs rounded-xl py-2 px-4 shadow-lg shadow-amber-500/20 shrink-0 self-start md:self-auto"
+              >
+                {isSyncing ? "Connecting..." : "Connect Google Calendar"}
+              </Button>
+            </div>
+          )}
 
           {/* Tab Contents */}
           
