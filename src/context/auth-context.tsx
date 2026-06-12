@@ -3,9 +3,10 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { onAuthStateChanged, signInWithPopup, signOut, User, GoogleAuthProvider, OAuthCredential } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, User, GoogleAuthProvider, OAuthCredential } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -24,6 +25,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check redirect result to capture credentials after signInWithRedirect
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          const credential = GoogleAuthProvider.credentialFromResult(result);
+          if (credential) {
+            const token = credential.accessToken || null;
+            setAccessToken(token);
+            if (token) localStorage.setItem('google_access_token', token);
+          }
+          setUser(result.user);
+        }
+      })
+      .catch((error: any) => {
+        console.error("Redirect authentication failed:", error);
+      });
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       const savedToken = localStorage.getItem('google_access_token');
@@ -38,7 +56,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let token: string | null = null;
     try {
         googleProvider.addScope('https://www.googleapis.com/auth/calendar.readonly');
-        const result = await signInWithPopup(auth, googleProvider);
+        let result;
+        try {
+          result = await signInWithPopup(auth, googleProvider);
+        } catch (popupError: any) {
+          if (
+            popupError.code === 'auth/popup-blocked' ||
+            popupError.code === 'auth/popup-closed-by-user' ||
+            popupError.code === 'auth/cancelled-popup-request'
+          ) {
+            console.log("Popup blocked or closed. Falling back to redirect...");
+            toast({
+              title: "Redirecting to Sign-In",
+              description: "Popup was blocked or closed. Redirecting to Google for authentication...",
+            });
+            await signInWithRedirect(auth, googleProvider);
+            return null;
+          }
+          throw popupError;
+        }
+
         const credential = GoogleAuthProvider.credentialFromResult(result);
         if (credential) {
             token = credential.accessToken || null;
@@ -46,8 +83,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (token) localStorage.setItem('google_access_token', token);
         }
         setUser(result.user);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Authentication failed:", error);
+      let description = error?.message || "An unknown error occurred during sign in.";
+      if (error?.code === 'auth/unauthorized-domain') {
+        const currentDomain = window.location.hostname;
+        description = `This domain (${currentDomain}) is not authorized in your Firebase console. Please add it under Authentication -> Settings -> Authorized Domains.`;
+      }
+      toast({
+        title: "Authentication Failed",
+        description,
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
