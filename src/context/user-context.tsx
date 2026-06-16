@@ -78,6 +78,7 @@ interface UserContextType {
   savedMeditations: SavedMeditation[];
   setQuests: (quests: Quest[]) => void;
   addQuest: (questData: Omit<Quest, 'id' | 'isCompleted' | 'completedAt' | 'createdAt'>) => void;
+  addQuests: (newQuestsList: Omit<Quest, 'isCompleted' | 'completedAt'>[]) => Promise<void>;
   editQuest: (updatedQuest: Quest) => void;
   deleteQuest: (questId: string) => void;
   completeQuest: (questId: string) => void;
@@ -379,6 +380,34 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     toast({ title: "Quest Added!", description: "A new quest has been added to your board." });
   };
 
+  const addQuests = async (newQuestsList: Omit<Quest, 'isCompleted' | 'completedAt'>[]) => {
+    const formatted: Quest[] = newQuestsList.map(q => {
+      const id = q.id || `q-${Date.now()}-${Math.random()}`;
+      return {
+        ...q,
+        id,
+        isCompleted: false,
+        createdAt: q.createdAt || Date.now(),
+      } as Quest;
+    });
+
+    await executeWrite(
+      async () => {
+        const batch = writeBatch(db);
+        formatted.forEach(q => {
+          const docRef = doc(db, 'users', authUser.uid, 'quests', q.id);
+          batch.set(docRef, q);
+        });
+        await batch.commit();
+      },
+      () => {
+        setQuests(prevQuests => [...formatted, ...prevQuests]);
+      },
+      "Add Quests (AI generated)"
+    );
+    toast({ title: "Quests Added!", description: `${formatted.length} new quests have been added to your board.` });
+  };
+
   const editQuest = async (updatedQuest: Quest) => {
     await executeWrite(
       async () => {
@@ -594,6 +623,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       theme: "default"
     };
 
+    // Remove any guest migration data to prevent immediate restoration
+    localStorage.removeItem('userQuests_guest');
+    localStorage.removeItem('userProfile_guest');
+    localStorage.removeItem('userProjects_guest');
+    localStorage.removeItem('userMeditations_guest');
+
     await executeWrite(
       async () => {
         const batch = writeBatch(db);
@@ -605,6 +640,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         });
         
         await batch.commit();
+
+        // Update local state immediately for snappy UI
+        setQuests([]);
+        setProfile(updatedProfile);
       },
       () => {
         setQuests([]);
@@ -646,7 +685,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <UserContext.Provider value={{ profile, quests, projects, savedMeditations, setQuests, addQuest, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask, deleteProjectTask, updateProfileCustomization, updateProfile, resetProgress, addSavedMeditation, isLoaded, cloudSyncError }}>
+    <UserContext.Provider value={{ profile, quests, projects, savedMeditations, setQuests, addQuest, addQuests, editQuest, deleteQuest, completeQuest, addProject, toggleProjectTask, addProjectTask, deleteProjectTask, updateProfileCustomization, updateProfile, resetProgress, addSavedMeditation, isLoaded, cloudSyncError }}>
       {children}
     </UserContext.Provider>
   );

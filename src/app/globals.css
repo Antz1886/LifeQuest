@@ -91,7 +91,7 @@
     --sidebar-ring: 277 87% 53%;
   }
 
-  .theme-cyberpunk {
+  .dark.theme-cyberpunk, .theme-cyberpunk {
     --background: 260 25% 6%;
     --foreground: 0 0% 98%;
     --card: 260 25% 10%;
@@ -111,7 +111,7 @@
     --ring: 290 100% 60%;
   }
 
-  .theme-forest {
+  .dark.theme-forest, .theme-forest {
     --background: 140 18% 6%;
     --foreground: 0 0% 98%;
     --card: 140 18% 10%;
@@ -131,7 +131,7 @@
     --ring: 142 76% 40%;
   }
 
-  .theme-ocean {
+  .dark.theme-ocean, .theme-ocean {
     --background: 220 35% 6%;
     --foreground: 0 0% 98%;
     --card: 220 35% 10%;
@@ -151,7 +151,7 @@
     --ring: 200 95% 45%;
   }
 
-  .theme-cosmic {
+  .dark.theme-cosmic, .theme-cosmic {
     --background: 260 40% 6%;
     --foreground: 0 0% 98%;
     --card: 260 40% 10%;
@@ -171,7 +171,7 @@
     --ring: 275 90% 65%;
   }
 
-  .theme-sunset {
+  .dark.theme-sunset, .theme-sunset {
     --background: 15 25% 6%;
     --foreground: 0 0% 98%;
     --card: 15 25% 10%;
@@ -191,7 +191,7 @@
     --ring: 24 95% 50%;
   }
 
-  .theme-minimal {
+  .dark.theme-minimal, .theme-minimal {
     --background: 0 0% 5%;
     --foreground: 0 0% 98%;
     --card: 0 0% 10%;

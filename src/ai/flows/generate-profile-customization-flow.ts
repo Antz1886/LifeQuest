@@ -93,20 +93,27 @@ const generateProfileCustomizationFlow = ai.defineFlow(
     }
 
     // 2. Generate the avatar
-    // Construct a simple, direct prompt for the image generation model.
-    const simpleAvatarPrompt = `Fantasy-style character bust, profile picture for a productivity app. Title: "${title}". ${input.avatarPrompt || ''}. Modern, vibrant, inspiring, dark, epic theme. Centered. Epic lighting.`;
+    let avatarDataUri = "";
+    try {
+      // Construct a simple, direct prompt for the image generation model.
+      const simpleAvatarPrompt = `Fantasy-style character bust, profile picture for a productivity app. Title: "${title}". ${input.avatarPrompt || ''}. Modern, vibrant, inspiring, dark, epic theme. Centered. Epic lighting.`;
 
-    const { media } = await callWithRetry(() => ai.generate({
-      model: googleAI.model('imagen-3.0-generate-002'),
-      prompt: simpleAvatarPrompt,
-      config: {
-        responseModalities: ['IMAGE'],
-      },
-    }));
+      const { media } = await callWithRetry(() => ai.generate({
+        model: googleAI.model('imagen-3.0-generate-002'),
+        prompt: simpleAvatarPrompt,
+        config: {
+          responseModalities: ['IMAGE'],
+        },
+      }));
 
-    const avatarDataUri = media?.url;
-    if (!avatarDataUri) {
-        throw new Error("Failed to generate avatar image.");
+      avatarDataUri = media?.url || "";
+      if (!avatarDataUri) {
+          throw new Error("No media URL returned.");
+      }
+    } catch (imageError) {
+      console.warn("Imagen avatar generation failed, falling back to Dicebear SVG avatar:", imageError);
+      // Fallback: Use Dicebear Shapes SVG avatar based on the generated title
+      avatarDataUri = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(title)}`;
     }
 
     return {

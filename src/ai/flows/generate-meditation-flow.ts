@@ -84,32 +84,8 @@ const generateMeditationFlow = ai.defineFlow(
         throw new Error("Failed to generate meditation script from AI model.");
     }
     
-    // 2. Convert the script to audio
-    const ttsResponse = await callWithRetry(() => ai.generate({
-        model: googleAI.model('gemini-2.5-flash'),
-        config: {
-          responseModalities: ['AUDIO'],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: 'Algenib' },
-            },
-          },
-        },
-        prompt: script,
-      }));
-
-    const audioMedia = ttsResponse.media;
-    if (!audioMedia) {
-      throw new Error('No audio media returned from text-to-speech.');
-    }
-
-    // 3. Convert the PCM audio to WAV format
-    const audioBuffer = Buffer.from(
-        audioMedia.url.substring(audioMedia.url.indexOf(',') + 1),
-        'base64'
-    );
-    const wavBase64 = await toWav(audioBuffer);
-    const audioDataUri = `data:audio/wav;base64,${wavBase64}`;
+    // 2. Audio generation is handled client-side via Web Speech API (SpeechSynthesis) to support the gemini-2.5-flash text model.
+    const audioDataUri = "";
 
     return {
       script: script,

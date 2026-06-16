@@ -1,23 +1,31 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { BrainCircuit, Wand2, Loader2, Library, PlusCircle } from 'lucide-react';
+import { BrainCircuit, Wand2, Loader2, Library, PlusCircle, Play, Pause, Square, Volume2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generateMeditation } from '@/ai/flows/generate-meditation-flow';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useUser } from '@/context/user-context';
 import type { SavedMeditation } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
+import { Slider } from '@/components/ui/slider';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+
+const presets = [
+  { label: "🧘 Calm Anxiety", prompt: "A 5-minute breathing session to reduce anxiety and stress." },
+  { label: "🧠 Deep Focus", prompt: "A 10-minute mindfulness practice to sharpen mental clarity and focus." },
+  { label: "😴 Deep Sleep", prompt: "A 15-minute body scan meditation for deep sleep and relaxation." },
+  { label: "✨ Morning Gratitude", prompt: "A 3-minute morning visualization focusing on gratitude and energy." }
+];
 
 function Generator({ onGenerated }: { onGenerated: (result: { script: string; audioDataUri: string, prompt: string }) => void }) {
     const [prompt, setPrompt] = useState("");
@@ -57,6 +65,21 @@ function Generator({ onGenerated }: { onGenerated: (result: { script: string; au
 
     return (
         <div className="space-y-4">
+            <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-2">Quick Presets:</span>
+                <div className="flex flex-wrap gap-2 mb-3">
+                    {presets.map((preset, index) => (
+                        <button
+                            key={index}
+                            onClick={() => setPrompt(preset.prompt)}
+                            disabled={isLoading}
+                            className="text-xs px-3 py-1.5 rounded-full border border-primary/20 bg-primary/5 hover:bg-primary/10 active:scale-95 transition-all text-primary-foreground font-semibold"
+                        >
+                            {preset.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
             <Textarea
                 placeholder="e.g., 'A 5-minute session to calm anxiety' or 'A 10-minute meditation for focus'"
                 className="min-h-[100px] text-base"
@@ -87,23 +110,133 @@ function Generator({ onGenerated }: { onGenerated: (result: { script: string; au
 }
 
 function MeditationPlayer({ meditation }: { meditation: SavedMeditation }) {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
+    const [rate, setRate] = useState(0.85); // Default to slightly slower, soothing rate
+
+    const playSpeech = () => {
+        if (typeof window === 'undefined') return;
+
+        if (isPaused) {
+            window.speechSynthesis.resume();
+            setIsPlaying(true);
+            setIsPaused(false);
+            return;
+        }
+
+        // Cancel any active speaking
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(meditation.script);
+        utterance.rate = rate;
+
+        // Find a suitable English voice, preferably a natural or female voice if available
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v => 
+            v.name.includes("Google US English") || 
+            v.name.includes("Natural") || 
+            v.lang.startsWith("en")
+        );
+        if (preferredVoice) {
+            utterance.voice = preferredVoice;
+        }
+
+        utterance.onend = () => {
+            setIsPlaying(false);
+            setIsPaused(false);
+        };
+
+        utterance.onerror = () => {
+            setIsPlaying(false);
+            setIsPaused(false);
+        };
+
+        window.speechSynthesis.speak(utterance);
+        setIsPlaying(true);
+        setIsPaused(false);
+    };
+
+    const pauseSpeech = () => {
+        if (typeof window === 'undefined') return;
+        window.speechSynthesis.pause();
+        setIsPlaying(false);
+        setIsPaused(true);
+    };
+
+    const stopSpeech = () => {
+        if (typeof window === 'undefined') return;
+        window.speechSynthesis.cancel();
+        setIsPlaying(false);
+        setIsPaused(false);
+    };
+
+    // Clean up when unmounting
+    useEffect(() => {
+        return () => {
+            if (typeof window !== 'undefined') {
+                window.speechSynthesis.cancel();
+            }
+        };
+    }, []);
+
     return (
         <div className="space-y-4 p-4 border-t">
-             <div>
-                <h4 className="font-semibold">Listen:</h4>
-                 <audio controls className="w-full mt-2">
-                    <source src={meditation.audioDataUri} type="audio/wav" />
-                    Your browser does not support the audio element.
-                </audio>
+             <div className="bg-muted/40 p-4 rounded-xl border border-border/40 space-y-4">
+                <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                        <Volume2 className="w-3.5 h-3.5 text-primary" /> AI Voice Reader
+                    </span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-muted-foreground">Speed: {rate}x</span>
+                    </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 justify-between">
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-center">
+                        {!isPlaying ? (
+                            <Button onClick={playSpeech} size="sm" className="rounded-xl h-9 px-4 gap-1.5 font-semibold">
+                                <Play className="w-3.5 h-3.5 fill-current" /> {isPaused ? "Resume" : "Start Listening"}
+                            </Button>
+                        ) : (
+                            <Button onClick={pauseSpeech} size="sm" variant="secondary" className="rounded-xl h-9 px-4 gap-1.5 font-semibold">
+                                <Pause className="w-3.5 h-3.5 fill-current" /> Pause
+                            </Button>
+                        )}
+                        {(isPlaying || isPaused) && (
+                            <Button onClick={stopSpeech} size="sm" variant="outline" className="rounded-xl h-9 w-9 p-0 text-destructive border-destructive/20 hover:bg-destructive/5 hover:text-destructive">
+                                <Square className="w-3.5 h-3.5 fill-current" />
+                            </Button>
+                        )}
+                    </div>
+
+                    <div className="flex items-center gap-3 w-full sm:max-w-[150px]">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground shrink-0">Slow</span>
+                        <Slider 
+                            value={[rate]} 
+                            min={0.6} 
+                            max={1.2} 
+                            step={0.05} 
+                            onValueChange={(val) => {
+                                setRate(val[0]);
+                                // If speaking, restart with the new rate for immediate effect
+                                if (isPlaying) {
+                                    setTimeout(() => playSpeech(), 50);
+                                }
+                            }}
+                            className="flex-1"
+                        />
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground shrink-0">Fast</span>
+                    </div>
+                </div>
             </div>
              <div>
-                <h4 className="font-semibold">Script:</h4>
-                <ScrollArea className="h-48 w-full rounded-md border p-4 bg-muted/30 mt-2">
-                   <p className="whitespace-pre-wrap font-body leading-relaxed text-sm">{meditation.script}</p>
+                <h4 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground mb-2">Meditation Script:</h4>
+                <ScrollArea className="h-48 w-full rounded-md border p-4 bg-muted/20">
+                   <p className="whitespace-pre-wrap font-body leading-relaxed text-sm text-foreground/90">{meditation.script}</p>
                 </ScrollArea>
             </div>
         </div>
-    )
+    );
 }
 
 

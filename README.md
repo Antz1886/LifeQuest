@@ -7,14 +7,16 @@
 ## 🚀 Key Features
 
 ### 🧠 AI-Powered Strategy
-- **Context-Aware Quest Forging**: Uses **Firebase Genkit** and **Gemini 2.0 Flash** to generate daily "Quests" based on your high-level goals, active projects, and even local weather conditions.
-- **Personalized Meditations**: Generates AI-driven meditation scripts and converts them to soothing audio using high-fidelity TTS models.
-- **Strategic Calendar Sync**: Automatically imports events from Google Calendar and Outlook, intelligently converting appointments into actionable quests.
+- **Context-Aware Quest Forging**: Uses **Firebase Genkit** and **Gemini 2.5 Flash** to generate daily "Quests" based on your high-level goals, active projects, and even local weather conditions.
+- **Quest Board Memory Retention**: AI-generated quests are merged and appended to your active quest list using Firestore batch writes, ensuring you never lose your manually created or existing quests.
+- **Personalized Meditations & Speech Synthesis**: Generates AI-driven meditation scripts on the fly. Playback is powered by an interactive client-side **Web Speech Synthesis Player** featuring speed adjustments (0.6x - 1.2x) and full playback controls (Play/Pause/Stop). Includes quick selection prompts (e.g., *Calm Anxiety, Deep Focus, Deep Sleep, Morning Gratitude*).
+- **Strategic Calendar Sync**: Automatically imports events from Google Calendar and Outlook, intelligently converting appointments into actionable quests. For Google Calendar, authentication forces consent parameters to ensure refresh tokens and readonly scopes are successfully authorized.
 
-### 🎮 Gamified Growth
+### 🎮 Gamified Growth & Visual Customization
 - **Experience & Leveling**: Earn XP for completing quests. Features an **Adaptive XP** system that grants a 50% bonus for overcoming procrastination on tasks older than 3 days.
+- **Counter Reset Security**: A secure progress reset routine that immediately clears active profiles and deletes residual local storage guest keys, preventing Firestore snapshots from accidentally restoring guest data.
 - **RPG Disciplines**: Track progress across five core disciplines: *Mind, Strength, Code, Wisdom,* and *Legacy*.
-- **Visual Streaks**: Maintain daily rituals to visualize your momentum and consistency.
+- **Platform Themes**: Select from six RPG-inspired visual themes (*Cyberpunk, Forest, Ocean, Cosmic, Sunset, Minimal*) implemented with high-specificity CSS overrides to guarantee reliable loading and rendering regardless of next-css loading order.
 
 ### 📈 Professional Productivity
 - **Eisenhower Matrix**: A strategic view that automatically categorizes your workload by Importance and Urgency.
@@ -22,8 +24,8 @@
 - **Project Vault**: Deep-link quests to long-term projects for structured goal tracking.
 
 ### 📱 Modern Tech Stack
-- **Framework**: [Next.js 14+](https://nextjs.org/) (App Router, Server Actions)
-- **Styling**: Tailwind CSS with a custom **Glassmorphism** design system.
+- **Framework**: [Next.js 15+](https://nextjs.org/) (App Router, Server Actions)
+- **Styling**: Tailwind CSS with custom theme variables.
 - **Backend/Auth**: [Firebase](https://firebase.google.com/) (Authentication, Real-time Firestore Sync).
 - **AI Engine**: [Firebase Genkit](https://firebase.google.com/docs/genkit) + Google Gemini.
 - **PWA**: Fully installable as a Progressive Web App for a native mobile/tablet experience.
@@ -42,12 +44,12 @@
    ```
 
 3. **Configure Environment Variables**:
-   Create a `.env.local` file and add your Firebase and Genkit credentials:
+   Create a `.env` file and add your Firebase and Genkit credentials:
    ```env
    NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
    NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-   GOOGLE_GENAI_API_KEY=your_gemini_api_key
+   GEMINI_API_KEY=your_gemini_api_key
    ```
 
 4. **Run the development server**:
@@ -57,7 +59,7 @@
 
 5. **Initialize Genkit (Optional)**:
    ```bash
-   npx genkit start
+   npm run genkit:dev
    ```
 
 ## 📐 Architecture

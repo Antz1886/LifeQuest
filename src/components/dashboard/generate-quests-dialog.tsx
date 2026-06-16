@@ -30,7 +30,7 @@ export function GenerateQuestsDialog() {
     const [isSyncing, setIsSyncing] = useState(false);
     const [syncedEvents, setSyncedEvents] = useState<CalendarEvent[]>([]);
     const [syncSource, setSyncSource] = useState<'google' | 'outlook' | null>(null);
-    const { setQuests, projects } = useUser();
+    const { addQuests, projects } = useUser();
     const { accessToken, signInWithGoogle, clearAccessToken } = useAuth();
     const { toast } = useToast();
 
@@ -110,7 +110,7 @@ export function GenerateQuestsDialog() {
                 createdAt: Date.now(),
                 priority: 2 as const,
             }));
-            setQuests(formattedQuests);
+            await addQuests(formattedQuests);
             toast({
                 title: "Quests Generated!",
                 description: "Your new quests (including calendar events) are ready.",
