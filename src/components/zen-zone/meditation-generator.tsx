@@ -110,12 +110,20 @@ function Generator({ onGenerated }: { onGenerated: (result: { script: string; au
 }
 
 function MeditationPlayer({ meditation }: { meditation: SavedMeditation }) {
+    const { toast } = useToast();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [rate, setRate] = useState(0.85); // Default to slightly slower, soothing rate
 
     const playSpeech = () => {
-        if (typeof window === 'undefined') return;
+        if (typeof window === 'undefined' || !window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+            toast({
+                title: "Voice Reader Unavailable",
+                description: "Your browser or device does not support Web Speech synthesis.",
+                variant: "destructive"
+            });
+            return;
+        }
 
         if (isPaused) {
             window.speechSynthesis.resume();
@@ -127,7 +135,7 @@ function MeditationPlayer({ meditation }: { meditation: SavedMeditation }) {
         // Cancel any active speaking
         window.speechSynthesis.cancel();
 
-        const utterance = new SpeechSynthesisUtterance(meditation.script);
+        const utterance = new window.SpeechSynthesisUtterance(meditation.script);
         utterance.rate = rate;
 
         // Find a suitable English voice, preferably a natural or female voice if available
@@ -157,14 +165,14 @@ function MeditationPlayer({ meditation }: { meditation: SavedMeditation }) {
     };
 
     const pauseSpeech = () => {
-        if (typeof window === 'undefined') return;
+        if (typeof window === 'undefined' || !window.speechSynthesis) return;
         window.speechSynthesis.pause();
         setIsPlaying(false);
         setIsPaused(true);
     };
 
     const stopSpeech = () => {
-        if (typeof window === 'undefined') return;
+        if (typeof window === 'undefined' || !window.speechSynthesis) return;
         window.speechSynthesis.cancel();
         setIsPlaying(false);
         setIsPaused(false);
@@ -173,7 +181,7 @@ function MeditationPlayer({ meditation }: { meditation: SavedMeditation }) {
     // Clean up when unmounting
     useEffect(() => {
         return () => {
-            if (typeof window !== 'undefined') {
+            if (typeof window !== 'undefined' && window.speechSynthesis) {
                 window.speechSynthesis.cancel();
             }
         };

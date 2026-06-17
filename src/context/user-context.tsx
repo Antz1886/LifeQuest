@@ -175,61 +175,69 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
         // MIGRATION LOGIC: If Firestore is empty, migrate guest data from local storage
         if (qList.length === 0) {
-          const guestQuestsStr = localStorage.getItem('userQuests_guest');
-          const guestProjectsStr = localStorage.getItem('userProjects_guest');
-          const guestMeditationsStr = localStorage.getItem('userMeditations_guest');
-          const guestProfileStr = localStorage.getItem('userProfile_guest');
+          try {
+            const guestQuestsStr = localStorage.getItem('userQuests_guest');
+            const guestProjectsStr = localStorage.getItem('userProjects_guest');
+            const guestMeditationsStr = localStorage.getItem('userMeditations_guest');
+            const guestProfileStr = localStorage.getItem('userProfile_guest');
 
-          const guestQuests = guestQuestsStr ? JSON.parse(guestQuestsStr) : [];
-          const guestProjects = guestProjectsStr ? JSON.parse(guestProjectsStr) : [];
-          const guestMeditations = guestMeditationsStr ? JSON.parse(guestMeditationsStr) : [];
+            const guestQuests = guestQuestsStr ? JSON.parse(guestQuestsStr) : [];
+            const guestProjects = guestProjectsStr ? JSON.parse(guestProjectsStr) : [];
+            const guestMeditations = guestMeditationsStr ? JSON.parse(guestMeditationsStr) : [];
 
-          if (guestQuests.length > 0 || guestProjects.length > 0 || guestMeditations.length > 0) {
-            const batch = writeBatch(db);
+            if (guestQuests.length > 0 || guestProjects.length > 0 || guestMeditations.length > 0) {
+              const batch = writeBatch(db);
 
-            if (guestProfileStr) {
-              const parsedProfile = JSON.parse(guestProfileStr);
-              batch.set(userDocRef, {
-                ...initialProfile,
-                name: authUser.displayName || initialProfile.name,
-                avatarUrl: authUser.photoURL || initialProfile.avatarUrl,
-                level: parsedProfile.level || 1,
-                xp: parsedProfile.xp || 0,
-                xpToNextLevel: parsedProfile.xpToNextLevel || 100,
-                theme: parsedProfile.theme || 'default',
-                streaks: parsedProfile.streaks || { personal: 0, work: 0, freelancing: 0, mindBody: 0 },
-              }, { merge: true });
-            }
+              if (guestProfileStr) {
+                const parsedProfile = JSON.parse(guestProfileStr);
+                batch.set(userDocRef, {
+                  ...initialProfile,
+                  name: authUser.displayName || initialProfile.name,
+                  avatarUrl: authUser.photoURL || initialProfile.avatarUrl,
+                  level: parsedProfile.level || 1,
+                  xp: parsedProfile.xp || 0,
+                  xpToNextLevel: parsedProfile.xpToNextLevel || 100,
+                  theme: parsedProfile.theme || 'default',
+                  streaks: parsedProfile.streaks || { personal: 0, work: 0, freelancing: 0, mindBody: 0 },
+                }, { merge: true });
+              }
 
-            guestQuests.forEach((q: Quest) => {
-              const newRef = doc(db, 'users', authUser.uid, 'quests', q.id);
-              batch.set(newRef, q);
-            });
-
-            guestProjects.forEach((p: Project) => {
-              const newRef = doc(db, 'users', authUser.uid, 'projects', p.id);
-              batch.set(newRef, p);
-            });
-
-            guestMeditations.forEach((m: SavedMeditation) => {
-              const newRef = doc(db, 'users', authUser.uid, 'meditations', m.id);
-              batch.set(newRef, m);
-            });
-
-            batch.commit()
-              .then(() => {
-                toast({ 
-                  title: "Data Synced!", 
-                  description: "Your local quests, projects, and meditations have been migrated to the cloud." 
-                });
-                localStorage.removeItem('userQuests_guest');
-                localStorage.removeItem('userProjects_guest');
-                localStorage.removeItem('userMeditations_guest');
-                localStorage.removeItem('userProfile_guest');
-              })
-              .catch((err) => {
-                console.error("Migration failed:", err);
+              guestQuests.forEach((q: Quest) => {
+                const newRef = doc(db, 'users', authUser.uid, 'quests', q.id);
+                batch.set(newRef, q);
               });
+
+              guestProjects.forEach((p: Project) => {
+                const newRef = doc(db, 'users', authUser.uid, 'projects', p.id);
+                batch.set(newRef, p);
+              });
+
+              guestMeditations.forEach((m: SavedMeditation) => {
+                const newRef = doc(db, 'users', authUser.uid, 'meditations', m.id);
+                batch.set(newRef, m);
+              });
+
+              batch.commit()
+                .then(() => {
+                  toast({ 
+                    title: "Data Synced!", 
+                    description: "Your local quests, projects, and meditations have been migrated to the cloud." 
+                  });
+                  try {
+                    localStorage.removeItem('userQuests_guest');
+                    localStorage.removeItem('userProjects_guest');
+                    localStorage.removeItem('userMeditations_guest');
+                    localStorage.removeItem('userProfile_guest');
+                  } catch (e) {
+                    console.warn("Failed to clear local guest items after migration:", e);
+                  }
+                })
+                .catch((err) => {
+                  console.error("Migration failed:", err);
+                });
+            }
+          } catch (e) {
+            console.error("Failed to parse guest data for migration:", e);
           }
         }
         questsLoaded = true;
@@ -368,9 +376,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       createdAt: Date.now(),
     };
 
+    const uid = authUser?.uid;
     await executeWrite(
       async () => {
-        await setDoc(doc(db, 'users', authUser.uid, 'quests', id), newQuest);
+        if (!uid) throw new Error("No user authenticated");
+        await setDoc(doc(db, 'users', uid, 'quests', id), newQuest);
       },
       () => {
         setQuests(prevQuests => [...prevQuests, newQuest]);
@@ -391,11 +401,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       } as Quest;
     });
 
+    const uid = authUser?.uid;
     await executeWrite(
       async () => {
+        if (!uid) throw new Error("No user authenticated");
         const batch = writeBatch(db);
         formatted.forEach(q => {
-          const docRef = doc(db, 'users', authUser.uid, 'quests', q.id);
+          const docRef = doc(db, 'users', uid, 'quests', q.id);
           batch.set(docRef, q);
         });
         await batch.commit();
@@ -409,9 +421,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const editQuest = async (updatedQuest: Quest) => {
+    const uid = authUser?.uid;
     await executeWrite(
       async () => {
-        await setDoc(doc(db, 'users', authUser.uid, 'quests', updatedQuest.id), updatedQuest);
+        if (!uid) throw new Error("No user authenticated");
+        await setDoc(doc(db, 'users', uid, 'quests', updatedQuest.id), updatedQuest);
       },
       () => {
         setQuests(prevQuests => prevQuests.map(q => q.id === updatedQuest.id ? updatedQuest : q));
@@ -422,9 +436,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const deleteQuest = async (questId: string) => {
+    const uid = authUser?.uid;
     await executeWrite(
       async () => {
-        await deleteDoc(doc(db, 'users', authUser.uid, 'quests', questId));
+        if (!uid) throw new Error("No user authenticated");
+        await deleteDoc(doc(db, 'users', uid, 'quests', questId));
       },
       () => {
         setQuests(prevQuests => prevQuests.filter(q => q.id !== questId));
@@ -466,11 +482,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         updatedProfile = { ...profile, xp: newXp };
     }
 
+    const uid = authUser?.uid;
     await executeWrite(
       async () => {
+        if (!uid) throw new Error("No user authenticated");
         const batch = writeBatch(db);
-        batch.set(doc(db, 'users', authUser.uid, 'quests', questId), { ...quest, isCompleted: isNowCompleted, completedAt });
-        batch.set(doc(db, 'users', authUser.uid), updatedProfile);
+        batch.set(doc(db, 'users', uid, 'quests', questId), { ...quest, isCompleted: isNowCompleted, completedAt });
+        batch.set(doc(db, 'users', uid), updatedProfile);
         await batch.commit();
       },
       () => {
@@ -499,9 +517,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       id,
       tasks: [],
     };
+    const uid = authUser?.uid;
     await executeWrite(
       async () => {
-        await setDoc(doc(db, 'users', authUser.uid, 'projects', id), newProject);
+        if (!uid) throw new Error("No user authenticated");
+        await setDoc(doc(db, 'users', uid, 'projects', id), newProject);
       },
       () => {
         setProjects(prevProjects => [...prevProjects, newProject]);
@@ -516,9 +536,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const updatedTasks = project.tasks.map(t => t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t);
     const updatedProject = { ...project, tasks: updatedTasks };
 
+    const uid = authUser?.uid;
     await executeWrite(
       async () => {
-        await setDoc(doc(db, 'users', authUser.uid, 'projects', projectId), updatedProject);
+        if (!uid) throw new Error("No user authenticated");
+        await setDoc(doc(db, 'users', uid, 'projects', projectId), updatedProject);
       },
       () => {
         setProjects(prevProjects => prevProjects.map(p => p.id === projectId ? updatedProject : p));
@@ -539,9 +561,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     };
     const updatedProject = { ...project, tasks: [...project.tasks, newTask] };
 
+    const uid = authUser?.uid;
     await executeWrite(
       async () => {
-        await setDoc(doc(db, 'users', authUser.uid, 'projects', projectId), updatedProject);
+        if (!uid) throw new Error("No user authenticated");
+        await setDoc(doc(db, 'users', uid, 'projects', projectId), updatedProject);
       },
       () => {
         setProjects(prevProjects => prevProjects.map(p => p.id === projectId ? updatedProject : p));
@@ -555,9 +579,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     if (!project) return;
     const updatedProject = { ...project, tasks: project.tasks.filter(t => t.id !== taskId) };
 
+    const uid = authUser?.uid;
     await executeWrite(
       async () => {
-        await setDoc(doc(db, 'users', authUser.uid, 'projects', projectId), updatedProject);
+        if (!uid) throw new Error("No user authenticated");
+        await setDoc(doc(db, 'users', uid, 'projects', projectId), updatedProject);
       },
       () => {
         setProjects(prevProjects => prevProjects.map(p => p.id === projectId ? updatedProject : p));
@@ -582,9 +608,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const updateProfileCustomization = async (title: string, avatarUrl: string) => {
     const updatedProfile = { ...profile, title, avatarUrl };
+    const uid = authUser?.uid;
     await executeWrite(
       async () => {
-        await setDoc(doc(db, 'users', authUser.uid), updatedProfile);
+        if (!uid) throw new Error("No user authenticated");
+        await setDoc(doc(db, 'users', uid), updatedProfile);
       },
       () => {
         setProfile(updatedProfile);
@@ -595,9 +623,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     const updatedProfile = { ...profile, ...updates };
+    const uid = authUser?.uid;
     await executeWrite(
       async () => {
-        await setDoc(doc(db, 'users', authUser.uid), updatedProfile);
+        if (!uid) throw new Error("No user authenticated");
+        await setDoc(doc(db, 'users', uid), updatedProfile);
       },
       () => {
         setProfile(updatedProfile);
@@ -624,19 +654,25 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     };
 
     // Remove any guest migration data to prevent immediate restoration
-    localStorage.removeItem('userQuests_guest');
-    localStorage.removeItem('userProfile_guest');
-    localStorage.removeItem('userProjects_guest');
-    localStorage.removeItem('userMeditations_guest');
+    try {
+      localStorage.removeItem('userQuests_guest');
+      localStorage.removeItem('userProfile_guest');
+      localStorage.removeItem('userProjects_guest');
+      localStorage.removeItem('userMeditations_guest');
+    } catch (lsErr) {
+      console.warn("localStorage clear failed:", lsErr);
+    }
 
+    const uid = authUser?.uid;
     await executeWrite(
       async () => {
+        if (!uid) throw new Error("No user authenticated");
         const batch = writeBatch(db);
-        batch.set(doc(db, 'users', authUser.uid), updatedProfile);
+        batch.set(doc(db, 'users', uid), updatedProfile);
         
         // Delete all quests to reset board history
         quests.forEach((q) => {
-          batch.delete(doc(db, 'users', authUser.uid, 'quests', q.id));
+          batch.delete(doc(db, 'users', uid, 'quests', q.id));
         });
         
         await batch.commit();
@@ -662,9 +698,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       createdAt: Date.now(),
     };
     
+    const uid = authUser?.uid;
     await executeWrite(
       async () => {
-        await setDoc(doc(db, 'users', authUser.uid, 'meditations', id), newMeditation);
+        if (!uid) throw new Error("No user authenticated");
+        await setDoc(doc(db, 'users', uid, 'meditations', id), newMeditation);
       },
       () => {
         setSavedMeditations(prev => {

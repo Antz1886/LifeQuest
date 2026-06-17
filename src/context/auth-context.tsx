@@ -26,26 +26,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Check redirect result to capture credentials after signInWithRedirect
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result) {
-          const credential = GoogleAuthProvider.credentialFromResult(result);
-          if (credential) {
-            const token = credential.accessToken || null;
-            setAccessToken(token);
-            if (token) localStorage.setItem('google_access_token', token);
+    try {
+      getRedirectResult(auth)
+        .then((result) => {
+          if (result) {
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            if (credential) {
+              const token = credential.accessToken || null;
+              setAccessToken(token);
+              try {
+                if (token) localStorage.setItem('google_access_token', token);
+              } catch (lsErr) {
+                console.warn("localStorage set failed:", lsErr);
+              }
+            }
+            setUser(result.user);
           }
-          setUser(result.user);
-        }
-      })
-      .catch((error: any) => {
-        console.error("Redirect authentication failed:", error);
-      });
+        })
+        .catch((error: any) => {
+          console.error("Redirect authentication failed:", error);
+        });
+    } catch (err) {
+      console.error("Failed to run getRedirectResult:", err);
+    }
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      const savedToken = localStorage.getItem('google_access_token');
-      if (savedToken) setAccessToken(savedToken);
+      try {
+        const savedToken = localStorage.getItem('google_access_token');
+        if (savedToken) setAccessToken(savedToken);
+      } catch (lsErr) {
+        console.warn("localStorage read failed:", lsErr);
+      }
       setLoading(false);
     });
     return () => unsubscribe();
