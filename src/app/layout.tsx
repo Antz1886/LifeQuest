@@ -47,6 +47,40 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`dark ${inter.variable} ${spaceGrotesk.variable}`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                // 1. Capture resource loading errors (stylesheets and scripts)
+                window.addEventListener('error', function(event) {
+                  var target = event.target;
+                  if (target && (target.tagName === 'SCRIPT' || target.tagName === 'LINK')) {
+                    var src = target.src || target.href;
+                    if (src && (src.indexOf('/_next/static/') !== -1 || src.indexOf('.js') !== -1 || src.indexOf('.css') !== -1)) {
+                      console.warn('Static chunk failed to load:', src, '. Forcing reload...');
+                      window.location.reload();
+                    }
+                  }
+                }, true);
+
+                // 2. Capture promise rejections (ChunkLoadErrors from dynamic imports)
+                window.addEventListener('unhandledrejection', function(event) {
+                  var reason = event.reason;
+                  var isChunkError = reason && (
+                    reason.name === 'ChunkLoadError' || 
+                    (reason.message && /loading.*chunk/i.test(reason.message))
+                  );
+                  if (isChunkError) {
+                    console.warn('Dynamic chunk load failed. Forcing reload...');
+                    window.location.reload();
+                  }
+                });
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="font-body antialiased bg-background text-foreground">
         <AuthProvider>
             <AuthGate>
