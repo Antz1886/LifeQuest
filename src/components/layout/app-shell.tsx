@@ -62,7 +62,10 @@ function Sidebar() {
 function BottomNavBar() {
     const pathname = usePathname();
     return (
-        <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md h-20 bg-card/80 backdrop-blur-xl border border-white/10 rounded-[2.5rem] shadow-2xl shadow-black/20 overflow-hidden">
+        <div className="lg:hidden fixed z-50 transition-all duration-300 
+            portrait:bottom-4 portrait:left-1/2 portrait:-translate-x-1/2 portrait:w-[90%] portrait:max-w-md portrait:h-16 portrait:rounded-[2rem] 
+            landscape:bottom-0 landscape:left-0 landscape:right-0 landscape:w-full landscape:h-12 landscape:rounded-none landscape:border-x-0 landscape:border-b-0 landscape:border-t
+            bg-card/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/20 overflow-hidden pb-safe">
             <div className="grid h-full grid-cols-3 font-medium">
                 {navItems.map(({href, label, icon: Icon}) => {
                     const isActive = (href === "/" && pathname === href) || (href !== "/" && pathname.startsWith(href));
@@ -72,12 +75,24 @@ function BottomNavBar() {
                                 'inline-flex flex-col items-center justify-center h-full w-full transition-all relative',
                                 isActive ? 'text-primary' : 'text-muted-foreground/60'
                             )}>
-                                <Icon className={cn("w-7 h-7 mb-1 transition-transform duration-300", isActive && "scale-110 -translate-y-1")} />
-                                <span className={cn("text-[10px] font-bold tracking-wider uppercase transition-all", isActive ? "opacity-100" : "opacity-50")}>{label}</span>
+                                <Icon className={cn(
+                                    "transition-transform duration-300", 
+                                    isActive && "scale-110",
+                                    "portrait:w-6 portrait:h-6 portrait:mb-0.5",
+                                    "landscape:w-5 landscape:h-5"
+                                )} />
+                                <span className={cn(
+                                    "text-[9px] font-bold tracking-wider uppercase transition-all landscape:hidden", 
+                                    isActive ? "opacity-100" : "opacity-50"
+                                )}>
+                                    {label}
+                                </span>
                                 {isActive && (
                                     <motion.div 
                                         layoutId="nav-active"
-                                        className="absolute bottom-2 w-1 h-1 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary),0.8)]"
+                                        className="absolute bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary),0.8)]
+                                            portrait:bottom-1.5 portrait:w-1 portrait:h-1
+                                            landscape:bottom-1 landscape:w-1.5 landscape:h-1.5"
                                     />
                                 )}
                             </button>
@@ -106,7 +121,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             <div className="flex w-full z-10 relative">
                 <Sidebar />
-                <div className="flex flex-col flex-1 min-w-0 pb-32 lg:pb-0">
+                <div className="flex flex-col flex-1 min-w-0 portrait:pb-24 landscape:pb-16 lg:pb-0">
                     {cloudSyncError && (
                         <div className="bg-red-500/10 border-b border-red-500/20 text-red-200 px-4 py-3 text-xs sm:text-sm font-medium flex items-center justify-between gap-4 backdrop-blur-md">
                             <div className="flex items-center gap-2">

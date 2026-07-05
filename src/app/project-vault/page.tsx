@@ -116,7 +116,7 @@ function ProjectVaultContent() {
                                                     </div>
                                                      <AlertDialog>
                                                         <AlertDialogTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="w-6 h-6 shrink-0 opacity-0 group-hover:opacity-100 text-destructive/80 hover:text-destructive">
+                                                            <Button variant="ghost" size="icon" className="w-6 h-6 shrink-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 text-destructive/80 hover:text-destructive">
                                                                 <Trash2 className="w-3 h-3" />
                                                             </Button>
                                                         </AlertDialogTrigger>

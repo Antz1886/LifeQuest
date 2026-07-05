@@ -241,9 +241,11 @@ export function AddEditQuestDialog({ quest, mode, children, open, onOpenChange }
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">None</SelectItem>
-                        {projects.map(p => (
-                          <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
-                        ))}
+                        {projects
+                          .filter(p => p.id && p.id.trim() !== "")
+                          .map(p => (
+                            <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   )}

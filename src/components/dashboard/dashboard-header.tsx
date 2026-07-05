@@ -58,7 +58,7 @@ function DashboardHeader() {
                         <p className="text-xs md:text-sm text-muted-foreground">{format(currentTime, 'MMMM do, yyyy')}</p>
                     </div>
                 </div>
-                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 w-full sm:w-auto justify-start sm:justify-end">
+                 <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-center gap-3 sm:gap-6 w-full sm:w-auto justify-stretch sm:justify-end">
                     <div className="flex items-center gap-3 bg-muted/30 sm:bg-transparent p-3 sm:p-0 rounded-2xl w-full sm:w-auto border border-border/10 sm:border-none">
                         <div className="p-2 bg-accent/10 rounded-lg shrink-0">
                             {WeatherIcon}

@@ -259,7 +259,7 @@ export function MeditationGenerator() {
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 order-2 lg:order-1">
                  <Card>
                     <CardHeader>
                         <CardTitle className="font-headline text-2xl flex items-center gap-2">
@@ -296,7 +296,7 @@ export function MeditationGenerator() {
                 </Card>
             </div>
 
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 order-1 lg:order-2">
                 <Card>
                     <CardHeader>
                         <div className="flex items-center justify-between">

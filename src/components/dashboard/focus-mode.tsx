@@ -82,7 +82,7 @@ export function FocusMode({ children, quest }: { children: ReactNode, quest: Que
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-card border-primary/20">
+            <DialogContent className="sm:max-w-[425px] bg-card border-primary/20 max-h-[95vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="font-headline text-2xl text-primary">{mode === 'focus' ? 'Focus Mode' : 'Break Time'}</DialogTitle>
                     <DialogDescription>

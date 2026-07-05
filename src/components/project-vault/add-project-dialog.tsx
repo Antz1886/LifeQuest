@@ -73,7 +73,7 @@ export function AddProjectDialog({ children, open, onOpenChange }: AddProjectDia
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[480px] max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl text-primary flex items-center gap-2">
             <PlusCircle />

@@ -139,7 +139,7 @@ export function GenerateQuestsDialog() {
                     <span className="text-xs font-bold uppercase tracking-wider">AI Generate</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px]">
+            <DialogContent className="sm:max-w-[480px] max-h-[95vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="font-headline text-2xl text-primary flex items-center gap-2"><Wand2 />AI Quest Generation</DialogTitle>
                     <DialogDescription>

@@ -437,7 +437,7 @@ export default function PlannerPage() {
                           <Button 
                             size="icon" 
                             variant="ghost" 
-                            className="w-6 h-6 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity text-primary"
+                            className="w-6 h-6 rounded-lg opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity text-primary"
                             onClick={() => handleConvertToQuest(event)}
                             title="Convert this event to a quest"
                           >
@@ -546,7 +546,7 @@ export default function PlannerPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="w-6 h-6 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity text-primary hover:bg-primary/10"
+                                  className="w-6 h-6 rounded-lg opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity text-primary hover:bg-primary/10"
                                   onClick={() => {
                                     const period = hourIndex >= 12 ? 'PM' : 'AM';
                                     const displayHr = hourIndex % 12 === 0 ? 12 : hourIndex % 12;
@@ -571,7 +571,7 @@ export default function PlannerPage() {
 
           {/* WEEKLY VIEW */}
           {currentView === "weekly" && (
-            <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+            <div className="flex overflow-x-auto md:grid md:grid-cols-7 gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none snap-x md:snap-none">
               {daysOfWeek.map((day, idx) => {
                 const isTodayDate = isSameDay(day, new Date());
                 const isSelected = isSameDay(day, selectedDate);
@@ -597,7 +597,7 @@ export default function PlannerPage() {
                     key={idx} 
                     onClick={() => setSelectedDate(day)}
                     className={cn(
-                      "cursor-pointer hover:border-primary/50 transition-all flex flex-col h-[350px] relative overflow-hidden",
+                      "cursor-pointer hover:border-primary/50 transition-all flex flex-col h-[350px] relative overflow-hidden w-[280px] shrink-0 snap-center md:w-auto md:shrink",
                       isSelected ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "border-border/60 bg-card/45 backdrop-blur-sm",
                       isTodayDate && !isSelected && "border-accent bg-accent/5"
                     )}
