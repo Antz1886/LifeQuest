@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Archive, Calendar, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useUser } from '@/context/user-context';
 
 const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutGrid },
@@ -27,7 +28,7 @@ function Sidebar() {
                     </div>
                 </div>
                 {navItems.map(({ href, label, icon: Icon }) => {
-                    const isActive = (href === "/" && pathname === href) || (href !== "/" && pathname.startsWith(href));
+                    const isActive = (href === "/" && pathname === href) || (href !== "/" && pathname && pathname.startsWith(href));
                     return (
                         <Link href={href} key={label} passHref>
                             <button className={cn(
@@ -62,13 +63,10 @@ function Sidebar() {
 function BottomNavBar() {
     const pathname = usePathname();
     return (
-        <div className="lg:hidden fixed z-50 transition-all duration-300 
-            portrait:bottom-4 portrait:left-1/2 portrait:-translate-x-1/2 portrait:w-[90%] portrait:max-w-md portrait:h-16 portrait:rounded-[2rem] 
-            landscape:bottom-0 landscape:left-0 landscape:right-0 landscape:w-full landscape:h-12 landscape:rounded-none landscape:border-x-0 landscape:border-b-0 landscape:border-t
-            bg-card/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/20 overflow-hidden pb-safe">
+        <div className="lg:hidden fixed z-50 transition-all duration-300 portrait:bottom-4 portrait:left-1/2 portrait:-translate-x-1/2 portrait:w-[90%] portrait:max-w-md portrait:h-16 portrait:rounded-[2rem] landscape:bottom-0 landscape:left-0 landscape:right-0 landscape:w-full landscape:h-12 landscape:rounded-none landscape:border-x-0 landscape:border-b-0 landscape:border-t bg-card/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/20 overflow-hidden pb-safe">
             <div className="grid h-full grid-cols-3 font-medium">
                 {navItems.map(({href, label, icon: Icon}) => {
-                    const isActive = (href === "/" && pathname === href) || (href !== "/" && pathname.startsWith(href));
+                    const isActive = (href === "/" && pathname === href) || (href !== "/" && pathname && pathname.startsWith(href));
                     return (
                         <Link href={href} key={label} passHref>
                             <button type="button" className={cn(
@@ -90,9 +88,7 @@ function BottomNavBar() {
                                 {isActive && (
                                     <motion.div 
                                         layoutId="nav-active"
-                                        className="absolute bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary),0.8)]
-                                            portrait:bottom-1.5 portrait:w-1 portrait:h-1
-                                            landscape:bottom-1 landscape:w-1.5 landscape:h-1.5"
+                                        className="absolute bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary),0.8)] portrait:bottom-1.5 portrait:w-1 portrait:h-1 landscape:bottom-1 landscape:w-1.5 landscape:h-1.5"
                                     />
                                 )}
                             </button>
@@ -103,8 +99,6 @@ function BottomNavBar() {
         </div>
     )
 }
-
-import { useUser } from '@/context/user-context';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
     const { cloudSyncError } = useUser();
