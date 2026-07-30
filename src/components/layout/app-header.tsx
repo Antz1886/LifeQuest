@@ -23,8 +23,8 @@ export function AppHeader({ title }: { title: string }) {
 
     const isLoaded = isUserLoaded && !isAuthLoading;
 
-    const displayName = isLoaded && authUser ? authUser.displayName || profile.name : 'Adventurer';
-    const displayAvatar = isLoaded && authUser ? authUser.photoURL || profile.avatarUrl : '';
+    const displayName = isLoaded ? (authUser?.displayName || profile.name || 'Adventurer') : 'Adventurer';
+    const displayAvatar = isLoaded ? (authUser?.photoURL || profile.avatarUrl || '') : '';
 
     return (
         <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">

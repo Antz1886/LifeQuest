@@ -298,6 +298,14 @@ export default function PlannerPage() {
     });
   }, [quests, selectedDate]);
 
+  // Find quests that are on the selected day but don't match any hour between 6 and 22
+  const unscheduledQuests = useMemo(() => {
+    return questsOnSelectedDay.filter(q => {
+      const hr = getQuestHour(q.time);
+      return hr === null || hr < 6 || hr > 22;
+    });
+  }, [questsOnSelectedDay]);
+
   const eventsOnSelectedDay = useMemo(() => {
     return syncedEvents.filter(event => {
       if (event.start.dateTime) {
@@ -565,6 +573,46 @@ export default function PlannerPage() {
                     );
                   })}
                 </div>
+
+                {/* Unscheduled & Off-Peak Quests */}
+                {unscheduledQuests.length > 0 && (
+                  <div className="border-t border-border/30 bg-muted/10 p-4 space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Unscheduled & Off-Peak Quests</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {unscheduledQuests.map((quest) => (
+                        <div
+                          key={quest.id}
+                          onClick={() => completeQuest(quest.id)}
+                          className={cn(
+                            "flex items-center justify-between p-3 rounded-xl border cursor-pointer hover:bg-muted/40 transition-all shadow-sm bg-card",
+                            quest.isCompleted ? "border-border/30 bg-muted/20 opacity-60" : "border-border/60 hover:border-primary/50"
+                          )}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            {quest.isCompleted ? (
+                              <Check className="w-4 h-4 text-primary shrink-0" />
+                            ) : (
+                              <Circle className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                            )}
+                            <span className={cn(
+                              "text-sm font-medium truncate",
+                              quest.isCompleted ? "line-through text-muted-foreground" : "text-foreground"
+                            )}>
+                              {quest.title}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge variant="outline" className={cn("text-[10px] gap-1 px-1.5 py-0.5", categoryColors[quest.category])}>
+                              {categoryIcons[quest.category]}
+                              <span className="hidden sm:inline">{quest.category}</span>
+                            </Badge>
+                            <Badge variant="secondary" className="text-[10px]">+{quest.xp} XP</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
