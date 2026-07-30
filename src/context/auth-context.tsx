@@ -20,8 +20,19 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const isMockEnabled = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    localStorage.getItem('mock_user') === 'true'
+  );
+
+  const [user, setUser] = useState<User | null>(isMockEnabled ? {
+    uid: 'mock-user-123',
+    displayName: 'Mock Hero',
+    email: 'hero@lifequest.com',
+    photoURL: 'https://api.dicebear.com/7.x/shapes/svg?seed=MockHero',
+  } as any : null);
+  const [loading, setLoading] = useState(!isMockEnabled);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -51,7 +62,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+      if (user) {
+        setUser(user);
+      } else {
+        if (isMockEnabled) {
+          setUser({
+            uid: 'mock-user-123',
+            displayName: 'Mock Hero',
+            email: 'hero@lifequest.com',
+            photoURL: 'https://api.dicebear.com/7.x/shapes/svg?seed=MockHero',
+          } as any);
+        } else {
+          setUser(null);
+        }
+      }
       try {
         const savedToken = localStorage.getItem('google_access_token');
         if (savedToken) setAccessToken(savedToken);
@@ -61,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [isMockEnabled]);
 
   const signInWithGoogle = async (): Promise<string | null> => {
     setLoading(true);

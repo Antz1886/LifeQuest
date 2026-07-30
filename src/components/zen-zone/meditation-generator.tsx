@@ -226,6 +226,8 @@ function MeditationPlayer({ meditation }: { meditation: SavedMeditation }) {
                             step={0.05} 
                             onValueChange={(val) => {
                                 setRate(val[0]);
+                            }}
+                            onValueCommit={(val) => {
                                 // If speaking, restart with the new rate for immediate effect
                                 if (isPlaying) {
                                     setTimeout(() => playSpeech(), 50);

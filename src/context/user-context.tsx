@@ -117,7 +117,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     setIsLoaded(false);
 
-    if (authUser && !cloudSyncError) {
+    const isLocalDevOffline = typeof window !== 'undefined' && (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      localStorage.getItem('mock_user') === 'true'
+    );
+
+    if (authUser && !cloudSyncError && !isLocalDevOffline) {
       // Authenticated User: Use Firestore
       const userDocRef = doc(db, 'users', authUser.uid);
       
